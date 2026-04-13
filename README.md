@@ -1,10 +1,8 @@
 # Hub pessoal (mypage)
 
-![Preview do hub — foto de perfil na home](docs/readme-preview.jpg)
+![Preview da home — hub pessoal Sthevan Santos](docs/hub-preview.png)
 
 Site estático em [Next.js](https://nextjs.org/) (App Router): home com links, feed editorial, integração opcional com GitHub/YouTube, blog em Markdown, página Sobre e Novidades.
-
-Para trocar a imagem do README, substitua o arquivo [`docs/readme-preview.jpg`](docs/readme-preview.jpg) (por exemplo por um print da tela da home).
 
 ## Requisitos
 
