@@ -47,12 +47,12 @@ export const siteData = {
     linkedin: "https://www.linkedin.com/in/sthevanssantos/",
     x: "https://x.com/SthevanCode",
     /** Quando criar o perfil no Threads com o mesmo @, o link costuma ser threads.com/@SthevanCode */
-    threads: "https://www.threads.com/@SthevanCode",
+    threads: "https://www.threads.com/@Sthevan.virex",
     whatsapp: "https://wa.me/5527988772784",
     youtubeRssUrl: ""
   },
   metrics: [
-    { label: "repositórios públicos", value: "26+" },
+    { label: "repositórios públicos", value: "25+" },
     { label: "foco em Fullstack", value: "React / Next / TypeScript" },
     { label: "site pessoal", value: "posts + links" }
   ],

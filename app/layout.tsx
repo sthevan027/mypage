@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 
+import { SiteEffects } from "@/components/site-effects";
 import { SiteHeader } from "@/components/site-header";
 
 import "./globals.css";
@@ -30,6 +31,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${displayFont.variable} ${monoFont.variable}`}>
+        <SiteEffects />
         <SiteHeader />
         {children}
       </body>

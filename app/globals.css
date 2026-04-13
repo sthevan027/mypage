@@ -51,3 +51,8 @@ textarea {
 ::selection {
   background: rgba(79, 140, 255, 0.34);
 }
+
+body.cursorNone,
+body.cursorNone * {
+  cursor: none !important;
+}

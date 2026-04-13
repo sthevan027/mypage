@@ -27,7 +27,7 @@ export default async function HomePage() {
       return "YouTube + redes + notas";
     }
     if (redesFeed.length > 0) {
-      return "X/Threads via JSON (edite content/redes-feed.json)";
+      return "X/Threads";
     }
     if (youtubeRssUrl) {
       return "Nenhum vídeo no RSS ainda";
