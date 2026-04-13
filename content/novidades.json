@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "id": "1",
+      "date": "2026-04-13",
+      "title": "Hub pessoal no ar",
+      "body": "Nova home com blog, sobre, novidades e links. YouTube fica preparado para quando você quiser ligar o RSS."
+    },
+    {
+      "id": "2",
+      "date": "2026-04-01",
+      "title": "Conteúdo só via repositório",
+      "body": "Posts do blog em Markdown e novidades neste JSON — sem painel admin, deploy após git push."
+    }
+  ]
+}

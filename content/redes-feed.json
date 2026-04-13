@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "platform": "X",
+      "category": "Perfil",
+      "title": "Conta principal no X: @SthevanCode",
+      "description": "Prioridade para posts e atualizações. Edite este bloco com trechos ou links de posts específicos em content/redes-feed.json.",
+      "url": "https://x.com/SthevanCode",
+      "dateLabel": "—"
+    },
+    {
+      "platform": "Threads",
+      "category": "Perfil",
+      "title": "Threads @SthevanCode (perfil preparado)",
+      "description": "Quando criar a conta com o mesmo @, atualize aqui com links dos posts. O URL do perfil segue o padrão threads.com/@SthevanCode.",
+      "url": "https://www.threads.com/@SthevanCode",
+      "dateLabel": "—"
+    }
+  ]
+}
