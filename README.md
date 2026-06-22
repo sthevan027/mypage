@@ -1,5 +1,9 @@
 # Hub pessoal (mypage)
 
+![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
+
+![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs&logoColor=white) ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+
 ![Preview da home — hub pessoal Sthevan Santos](docs/hub-preview.png)
 
 Site estático em [Next.js](https://nextjs.org/) (App Router): home com links, feed editorial, integração opcional com GitHub/YouTube, blog em Markdown, página Sobre e Novidades.
