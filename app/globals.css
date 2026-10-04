@@ -2,7 +2,7 @@
 
 :root {
   --bg: #0a0a0a;
-  --bg-raised: rgba(12, 12, 12, 0.86);
+  --bg-raised: rgba(12, 12, 12, 0.9);
   --fg: #ededed;
   --fg-soft: #cfcfcf;
   --muted: #a1a1a1;
@@ -24,6 +24,14 @@
 html {
   background: var(--bg);
   -webkit-text-size-adjust: 100%;
+  /* Âncoras (índice do post) ficam abaixo da barra fixa. */
+  scroll-padding-top: 84px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 body {
@@ -65,13 +73,29 @@ video {
 
 /* ---------- fundo topográfico ---------- */
 
+/*
+ * Performance: o fundo fica numa camada própria (fixed + contain) que o
+ * navegador rasteriza uma vez. Rolar a página não repinta nada nele, e o
+ * movimento lento usa só `transform` (compositor/GPU). Animar
+ * `background-position` ou empilhar `backdrop-filter` por cima forçava um
+ * redesenho da tela inteira a cada quadro (~46 fps medidos antes).
+ */
 .topo {
   position: fixed;
   inset: 0;
   z-index: -1;
+  overflow: hidden;
   pointer-events: none;
+  contain: strict;
+}
+
+.topo::before {
+  content: "";
+  position: absolute;
+  inset: -3%;
   background: url("/topo.svg") center / cover no-repeat;
-  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
 }
 
 .topo::after {
@@ -86,13 +110,13 @@ video {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .topo {
-    animation: topo-drift 120s ease-in-out infinite alternate;
+  .topo::before {
+    animation: topo-drift 240s ease-in-out infinite alternate;
   }
 
   @keyframes topo-drift {
-    from { background-position: 48% 50%; }
-    to { background-position: 52% 46%; }
+    from { transform: translate3d(-1.2%, 0.8%, 0); }
+    to { transform: translate3d(1.2%, -0.8%, 0); }
   }
 }
 
@@ -128,7 +152,6 @@ video {
   border: 1px solid var(--line);
   background: var(--bg-raised);
   border-radius: var(--radius);
-  backdrop-filter: blur(6px);
 }
 
 .badge {
@@ -169,8 +192,10 @@ video {
   top: 0;
   z-index: 20;
   border-bottom: 1px solid #161616;
-  background: rgba(10, 10, 10, 0.7);
-  backdrop-filter: blur(10px);
+  /* Sem blur: uma barra fixa com blur repinta o que passa por baixo a cada
+     quadro da rolagem. Fundo quase opaco + camada própria resolve. */
+  background: rgba(10, 10, 10, 0.94);
+  transform: translateZ(0);
 }
 
 .nav__inner {
@@ -248,8 +273,7 @@ video {
     padding: 6px;
     border: 1px solid var(--line);
     border-radius: 16px;
-    background: rgba(12, 12, 12, 0.88);
-    backdrop-filter: blur(12px);
+    background: rgba(12, 12, 12, 0.96);
   }
 
   .tabbar a {
@@ -932,5 +956,48 @@ a.feed-item:hover {
 @media (max-width: 720px) {
   .tabbar-search {
     display: flex;
+  }
+}
+
+/* ---------- movimento (só opacity/transform: não pesa) ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 10px, 0);
+    }
+  }
+
+  /* A página entra suave ao navegar; os itens da lista entram em cascata. */
+  main,
+  .post-layout {
+    animation: rise 0.4s cubic-bezier(0.2, 0, 0, 1) backwards;
+  }
+
+  .panel > .feed-item,
+  .links a {
+    animation: rise 0.45s cubic-bezier(0.2, 0, 0, 1) backwards;
+  }
+
+  .panel > .feed-item:nth-child(2),
+  .links a:nth-child(2) { animation-delay: 40ms; }
+  .panel > .feed-item:nth-child(3),
+  .links a:nth-child(3) { animation-delay: 80ms; }
+  .panel > .feed-item:nth-child(4),
+  .links a:nth-child(4) { animation-delay: 120ms; }
+  .panel > .feed-item:nth-child(5),
+  .links a:nth-child(5) { animation-delay: 160ms; }
+  .panel > .feed-item:nth-child(n + 6),
+  .links a:nth-child(n + 6) { animation-delay: 200ms; }
+
+  .feed-item,
+  .links a,
+  .toc a,
+  .nav__link,
+  .gh-row {
+    transition-property: color, background-color, border-color;
+    transition-duration: 0.18s;
+    transition-timing-function: ease;
   }
 }

@@ -12,7 +12,7 @@ export function Figure({src, alt, caption, narrow}: FigureProps) {
   return (
     <figure className={`figure${narrow ? " figure--narrow" : ""}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={alt} loading="lazy" />
+      <img src={src} alt={alt} loading="lazy" decoding="async" />
       {caption ? <figcaption>{caption}</figcaption> : null}
     </figure>
   );
