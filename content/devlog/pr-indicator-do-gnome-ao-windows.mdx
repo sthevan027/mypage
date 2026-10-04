@@ -1,0 +1,88 @@
+---
+title: "PR Indicator: do GNOME ao Windows"
+date: "2026-10-03"
+excerpt: "Uma extensão pra barra do GNOME que virou app de bandeja no Windows, com o mesmo visual — e o que a bandeja de 16×16, o tema Glass e um token que nunca salvava me ensinaram."
+project: "PR Indicator"
+cover: "/devlog/pr-indicator-do-gnome-ao-windows/capa.png"
+draft: true
+---
+
+Eu cansei de trocar de aba só pra ver se tinha PR esperando minha revisão. Então fiz uma coisa pequena: um indicador na barra do sistema que mostra quantos PRs estão esperando por mim e quais PRs meus estão abertos. Clico, vejo a lista, clico no PR e ele abre no navegador. Atualiza sozinho a cada 60 segundos.
+
+A ideia veio do [pr-widget](https://github.com/lucianodiisouza/pr-widget), que faz isso na barra de menus do macOS. Eu uso Linux, então comecei pelo GNOME.
+
+## Primeiro, a extensão do GNOME
+
+No GNOME Shell, uma extensão é JavaScript rodando dentro do próprio shell (GJS). O indicador fica na barra superior, com o ícone do GitHub e o número ao lado. O token vem do `gh` CLI que eu já uso — sem pedir login novo.
+
+<Figure src="/devlog/pr-indicator-do-gnome-ao-windows/gnome-popup.png" alt="Popup da extensão no GNOME com as seções de PRs" caption="O popup no GNOME: PRs pra revisar e meus PRs abertos." narrow />
+
+Depois veio um painel de configuração dentro do próprio popup, sem janela separada: ordem e visibilidade das seções (arrastando), o que o número acompanha, quatro temas (Automático, Branco, Preto e Glass) e um token manual guardado no chaveiro do sistema pra quem não usa o `gh`.
+
+<Figure src="/devlog/pr-indicator-do-gnome-ao-windows/gnome-config.png" alt="Painel de configuração inline no GNOME" caption="Configuração inline: clicou na engrenagem, a lista vira o painel." narrow />
+
+## Por que não dava pra só "rodar no Windows"
+
+Eu uso Linux e Windows, e queria o mesmo indicador nos dois. Só que uma extensão do GNOME depende das peças do próprio GNOME Shell — no Windows não existe nada disso. Então a versão Windows virou um **app separado** que reaproveita a lógica pura (a ordem e a visibilidade das seções são o mesmo arquivo nas duas versões) e redesenha a interface.
+
+O plano inicial era um menu nativo do Windows, simples. Mas eu queria **o mesmo visual** do GNOME: o popup, os temas, o painel inline. Pra isso, o caminho foi **Electron**: o popup vira uma janelinha HTML/CSS sem borda, colada no ícone da bandeja.
+
+<Video src="/devlog/pr-indicator-do-gnome-ao-windows/demo.mp4" caption="Demo de 16 segundos: hover no ícone, os temas e o arraste animado." />
+
+## A bandeja tem 16×16
+
+No GNOME, o número fica **ao lado** do ícone. Na bandeja do Windows não cabe: o espaço de cada ícone é um quadradinho de 16×16. Desenhar o número dentro do ícone ficou feio. A solução que eu escolhi: **o ícone vira o número quando o mouse passa por cima**, e volta ao logo quando sai.
+
+<Figure src="/devlog/pr-indicator-do-gnome-ao-windows/hover.gif" alt="Ícone do GitHub trocando pelo número 2 no hover" caption="Hover: o logo vira a contagem de PRs." narrow />
+
+Tinha um detalhe chato: no Windows, o Electron avisa quando o mouse **se mexe** em cima do ícone, mas não avisa quando ele **sai**. Então, enquanto o mouse está ali, o app confere a posição do cursor a cada 150 ms:
+
+```js
+tray.on("mouse-move", onTrayMouseMove);
+
+function onTrayMouseMove() {
+  if (hovering) return;
+  hovering = true;
+  updateTray();
+  // Não existe "mouse-leave" na bandeja do Windows:
+  // a saída é detectada olhando onde o cursor está.
+  hoverTimer = setInterval(() => {
+    if (!isInside(screen.getCursorScreenPoint(), tray.getBounds()))
+      stopHover();
+  }, 150);
+}
+```
+
+## O tema Glass deu trabalho
+
+No GNOME, o Glass é um fundo escuro translúcido com blur. No Windows, o primeiro instinto foi usar o material acrílico do próprio sistema. Não funcionou do jeito esperado: numa janela comum, o Windows troca o acrílico por **cinza chapado** quando a janela está sem foco — e o popup aberto pela bandeja nem sempre ganha o foco.
+
+Testei variações lado a lado. Janela transparente com acrílico desfocava demais. A escolhida foi um **vidro escuro sem desfoque**, em que dá pra ver o que está atrás, com cantos arredondados recortados na própria janela (janela transparente não ganha os cantos do Windows).
+
+<Figure src="/devlog/pr-indicator-do-gnome-ao-windows/temas.png" alt="Os quatro temas lado a lado: Automático, Branco, Preto e Glass" caption="Os quatro temas no Windows, com o mesmo conteúdo." />
+
+## Arrastar tinha que ser fluido
+
+Reordenar as seções pelo `☰` funcionava, mas a linha só "pulava" de lugar. Refiz: a linha acompanha o ponteiro, levantada com sombra; a vizinha desliza pra abrir espaço; ao soltar, ela encaixa animada. E se o Windows estiver com "reduzir animações" ligado, a troca é instantânea.
+
+<Figure src="/devlog/pr-indicator-do-gnome-ao-windows/arrastar.gif" alt="Arrastando uma seção pra reordenar" caption="Arraste com a vizinha deslizando." narrow />
+
+## Os bugs que os testes acharam
+
+Antes de lançar, rodei uma bateria de testes em paralelo — visual, interações, bandeja e revisão de código. Os achados que mais valeram:
+
+- **O token manual nunca era salvo.** O código chamava métodos com o nome errado na API de cofre de senhas do Electron, e o teste usava um "falso" com o mesmo nome errado — por isso passava.
+- **Clicar no ☰ sem arrastar invertia a ordem das seções.** O bug existia também na versão GNOME, e foi corrigido nas duas.
+- **Com a barra de tarefas no topo**, o popup abria em cima do próprio ícone.
+
+Saiu com 41 testes automatizados no lado Windows.
+
+<Callout>
+A versão Windows tem instalador que não pede administrador e já liga o "iniciar com o Windows" na primeira execução. Download na [release windows-v1.0.0](https://github.com/sthevan027/gnome-pr-indicator/releases/tag/windows-v1.0.0) — o código é aberto.
+</Callout>
+
+## O que eu levo disso
+
+- **Reaproveitar a lógica, não a interface.** O que era puro (ordem das seções) foi direto pras duas versões; o resto foi redesenhado pra cada sistema.
+- **A plataforma manda.** 16×16 na bandeja, acrílico sem foco, falta de "mouse-leave" — cada limitação virou uma decisão de design.
+- **Teste falso mente.** Um mock com a API errada escondeu o bug mais grave.
