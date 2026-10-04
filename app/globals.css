@@ -560,9 +560,9 @@ a.feed-item:hover {
 
 .post-layout {
   display: grid;
-  grid-template-columns: 1fr 180px;
+  grid-template-columns: minmax(0, 1fr) 210px;
   gap: 48px;
-  max-width: 900px;
+  max-width: 940px;
   margin: 0 auto;
   padding: 40px 24px 64px;
 }
@@ -749,16 +749,32 @@ a.feed-item:hover {
   position: sticky;
   top: 88px;
   align-self: start;
+  min-width: 0;
   font-size: 13px;
-  line-height: 2;
+  line-height: 1.45;
 }
 
+.toc .eyebrow {
+  display: block;
+  margin-bottom: 10px;
+}
+
+/* Cada item tem uma barra à esquerda; a da seção atual fica azul. */
 .toc a {
   display: block;
+  padding: 5px 0 5px 12px;
+  border-left: 2px solid var(--line);
   color: var(--muted);
+  overflow-wrap: anywhere;
+  transition: color 0.15s, border-color 0.15s;
 }
 
 .toc a:hover {
+  color: var(--fg);
+}
+
+.toc a[aria-current="location"] {
+  border-left-color: var(--accent);
   color: var(--fg);
 }
 

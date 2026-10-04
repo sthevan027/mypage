@@ -7,6 +7,7 @@ import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 
 import {mdxComponents} from "@/components/mdx";
+import {Toc} from "@/components/toc";
 import {getPost, getPosts} from "@/lib/devlog";
 import {formatDate} from "@/lib/format";
 
@@ -81,16 +82,7 @@ export default async function PostPage({params}: Params) {
             {newer ? <Link href={`/devlog/${newer.slug}`}>{newer.title} →</Link> : null}
           </nav>
         </article>
-        {post.toc.length > 1 ? (
-          <aside className="toc" aria-label="Nesta página">
-            <span className="eyebrow">Nesta página</span>
-            {post.toc.map(item => (
-              <a key={item.id} href={`#${item.id}`}>
-                {item.title}
-              </a>
-            ))}
-          </aside>
-        ) : null}
+        {post.toc.length > 1 ? <Toc items={post.toc} /> : null}
       </div>
     </>
   );
