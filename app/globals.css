@@ -1001,3 +1001,78 @@ a.feed-item:hover {
     transition-timing-function: ease;
   }
 }
+
+/* ---------- projetos (open source) ---------- */
+
+.project-group {
+  margin-bottom: 28px;
+}
+
+.project-group__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin-bottom: 10px;
+}
+
+.project {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.project:last-child {
+  border-bottom: 0;
+}
+
+.project__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 14px;
+}
+
+.project h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.project h3 a:hover {
+  color: var(--accent);
+}
+
+.project__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.project p {
+  margin: 6px 0 10px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.project__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 13px;
+}
+
+.project__links a {
+  color: var(--fg-soft);
+}
+
+.project__links a:hover {
+  color: var(--accent);
+}
+
+.project__links a.accent {
+  color: var(--accent);
+}

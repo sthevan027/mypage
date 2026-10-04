@@ -3,6 +3,7 @@
 export const NAV_ITEMS = [
   {href: "/", label: "Início"},
   {href: "/devlog", label: "Devlog"},
+  {href: "/projetos", label: "Projetos"},
   {href: "/agora", label: "Agora"},
   {href: "/sobre", label: "Sobre"}
 ];

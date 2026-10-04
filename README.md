@@ -8,6 +8,7 @@
 
 - **Início** — link-in-bio + bloco **"Agora"** (texto curto + atividade do GitHub, atualizada sozinha de hora em hora) + últimos itens do devlog.
 - **Devlog** — **posts** longos em MDX (imagem, GIF, vídeo, código, destaques, índice) e **notas** puxadas dos meus posts no X. Filtro Tudo / Posts / Notas e RSS.
+- **Projetos** (`/projetos`) — meus projetos **open source**, agrupados, com linguagem, estrelas e último push vindos do GitHub (cache de 1 h) e links pros posts do devlog de cada um.
 - **Busca** — `Ctrl/⌘ + K` pula pra qualquer página, post ou link.
 - Visual minimal dev (Geist, preto, azul `#60a5fa`) com **curvas de nível** geradas por código no fundo.
 
@@ -59,6 +60,7 @@ Texto em Markdown. Imagens e vídeos ficam em `public/devlog/<slug>/`.
 | Nome, frase, links | [`data/site.ts`](data/site.ts) |
 | Bloco "Agora" (texto) | [`data/agora.ts`](data/agora.ts) — atualize também `updatedAt` |
 | Sobre | [`data/sobre.ts`](data/sobre.ts) |
+| Projetos open source | [`data/projetos.ts`](data/projetos.ts) — **lista de permissão**: só aparece o que está lá (nada de cliente/trabalho entra sozinho) |
 | Fundo de curvas de nível | [`scripts/gen-topo.mjs`](scripts/gen-topo.mjs) → `pnpm gen:topo` (troque a `SEED` pra outro desenho) |
 
 O GitHub do "Agora" funciona sem token (limite de 60 req/h, com cache de 1 h). Pra subir o limite, defina `GITHUB_TOKEN` nas variáveis de ambiente da Vercel.

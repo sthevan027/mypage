@@ -92,3 +92,56 @@ export async function getGithubActivity(username: string): Promise<GithubActivit
     return EMPTY;
   }
 }
+
+export type RepoInfo = {
+  name: string;
+  language: string | null;
+  stars: number;
+  pushedAt: string;
+  url: string;
+  homepage: string | null;
+  license: string | null;
+};
+
+type GithubApiRepo = {
+  name: string;
+  language: string | null;
+  stargazers_count: number;
+  pushed_at: string;
+  html_url: string;
+  homepage: string | null;
+  license: {spdx_id: string} | null;
+};
+
+/**
+ * Metadados dos repositórios públicos do usuário, por nome (cache de 1 h).
+ * Falhou (limite da API, sem rede)? Devolve vazio e a página usa o texto de
+ * `data/projetos.ts`.
+ */
+export async function getGithubRepoInfo(username: string): Promise<Record<string, RepoInfo>> {
+  try {
+    const response = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=pushed`, {
+      headers: headers(),
+      next: {revalidate: 3600}
+    });
+    if (!response.ok)
+      return {};
+    const repos = (await response.json()) as GithubApiRepo[];
+    return Object.fromEntries(
+      repos.map(repo => [
+        repo.name,
+        {
+          name: repo.name,
+          language: repo.language,
+          stars: repo.stargazers_count,
+          pushedAt: repo.pushed_at,
+          url: repo.html_url,
+          homepage: repo.homepage || null,
+          license: repo.license?.spdx_id && repo.license.spdx_id !== "NOASSERTION" ? repo.license.spdx_id : null
+        }
+      ])
+    );
+  } catch {
+    return {};
+  }
+}
