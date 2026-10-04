@@ -4,7 +4,7 @@ date: "2026-10-04"
 excerpt: "O mapa de tudo que eu mantenho em código aberto: ferramentas de bandeja, apps web, automações e os sites — e o que cada um vai ganhar aqui no devlog."
 project: "Open source"
 cover: "/devlog/meus-projetos-open-source/capa.png"
-draft: true
+draft: false
 ---
 
 Este devlog existe pra contar o que eu construo enquanto construo. Faz sentido começar pelo mapa: **o que eu mantenho em código aberto**, projeto por projeto, e por onde cada um anda.
@@ -20,8 +20,8 @@ Só entra aqui código meu, em aberto. Projetos de cliente e do trabalho ficam d
 São as que eu mais uso e as que mais mexo ultimamente.
 
 - **[PR Indicator](https://github.com/sthevan027/gnome-pr-indicator)** — mostra na barra do sistema quantos PRs estão esperando minha revisão. Começou como extensão do GNOME Shell e virou também app de bandeja do Windows, com o mesmo visual. A release `windows-v1.0.0` saiu em 03/10. Tem [um post só sobre ele](/devlog/pr-indicator-do-gnome-ao-windows).
-- **[focusbrew](https://github.com/sthevan027/focusbrew)** — app de bandeja (Tauri, com Rust e React) que percebe quando estou programando com IA e liga o modo foco: bloqueia apps de distração e ativa o Não Perturbe. Junta tarefas, PRs do GitHub e um timer com pausa-café. Releases: `v0.1.0` (10/09) e `v0.1.1` (04/10).
-- **[Pacer](https://github.com/sthevan027/pacer)** — widget pro Windows que mostra o uso do meu plano do Claude (sessão de 5 horas e semanal) e **pra onde o ritmo atual me leva** antes da redefinição, com alertas e um ícone na bandeja que muda de cor. Foi recriado do zero a partir do Claude-Glass; a `v2.0.0` saiu em 03/10 e a `v2.0.1` em 04/10.
+- **[focusbrew](https://github.com/sthevan027/focusbrew)** — app de bandeja (Tauri, com Rust e React) que percebe quando estou programando com IA e liga o modo foco: bloqueia apps de distração e ativa o Não Perturbe. Junta tarefas, PRs do GitHub e um timer com pausa-café. Releases: `v0.1.0` (10/09) e `v0.1.1` (04/10). [Contei como foi feito, e o bug de travamento](/devlog/focusbrew-app-de-bandeja-modo-foco).
+- **[Pacer](https://github.com/sthevan027/pacer)** — widget pro Windows que mostra o uso do meu plano do Claude (sessão de 5 horas e semanal) e **pra onde o ritmo atual me leva** antes da redefinição, com alertas e um ícone na bandeja que muda de cor. Foi recriado do zero a partir do Claude-Glass; a `v2.0.0` saiu em 03/10 e a `v2.0.1` em 04/10. [A história completa está aqui](/devlog/pacer-claude-glass-recriado-em-tauri).
 - **[Organizador](https://github.com/sthevan027/organizador)** — organiza arquivos por tipo e extensão, com modo de simulação (dry-run) e limpeza de disco integrada: temporários, cache de navegadores, lixeira, downloads parados, cache de desenvolvimento e crash dumps. Python com CustomTkinter, tema claro e escuro. `v1.0.0` em 14/09.
 - **[DevRadar](https://github.com/sthevan027/DevRadar)** — CLI em PowerShell que analisa perfis do GitHub e gera um relatório HTML com métricas e insights.
 - **[Dotfile](https://github.com/sthevan027/Dotfile)** — os dotfiles e scripts do meu ambiente (Linux, Zsh e Bash).
@@ -49,4 +49,4 @@ E um de estudo: a [Calculadora .NET](https://github.com/sthevan027/Calculadora.d
 
 ## O que vem pro devlog
 
-Cada projeto vai ganhando seus posts aqui, e o card dele em [Projetos](/projetos) aponta pra eles. O primeiro, do PR Indicator, já está no ar. Os próximos saem conforme eu mexo em cada projeto — sempre com o que deu certo, o que quebrou e por quê.
+Cada projeto vai ganhando seus posts aqui, e o card dele em [Projetos](/projetos) aponta pra eles. Já estão no ar os do PR Indicator, do focusbrew e do Pacer. Os próximos saem conforme eu mexo em cada projeto — sempre com o que deu certo, o que quebrou e por quê.
