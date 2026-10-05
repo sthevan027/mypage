@@ -51,6 +51,17 @@ export default function SobrePage() {
               ))}
             </ul>
           </section>
+
+          <nav className="panel links" aria-label="Pra onde ir">
+            {siteData.links
+              .filter(link => ["Portfolio", "Currículo", "Virex · orçamento"].includes(link.label))
+              .map(link => (
+                <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer" className={link.featured ? "is-featured" : undefined}>
+                  <span>{link.label}</span>
+                  <span className="mono">{link.hint}</span>
+                </a>
+              ))}
+          </nav>
         </div>
       </main>
     </>

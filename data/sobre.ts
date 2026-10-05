@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Code2, Coffee, GitBranch, Heart, Play, Terminal } from "lucide-react";
+import { Bug, Code2, Coffee, GitBranch, Play, Terminal } from "lucide-react";
 
 export type MotivationItem = {
   icon: LucideIcon;
@@ -14,36 +14,40 @@ export type TimelineEntry = {
 export const sobreData = {
   pageTitle: "Sobre mim",
   heroTitle: "Sobre o Sthevan",
-  heroSubtitle: "Engenheiro de Software • frontend e produto",
+  heroSubtitle: "Desenvolvedor fullstack • veio da obra, automação como marca",
   bio: [
-    "Sou desenvolvedor focado em criar interfaces claras e código sustentável. Gosto de unir boa experiência de uso com arquitetura que escala e deixa o time mais produtivo.",
-    "Trabalho principalmente com Linux, React, Next.js e TypeScript no frontend, e tenho contato com APIs, bancos e automações quando o projeto pede. Meu portfório resume projetos e experimentos que já publiquei.",
-    "Este hub é o lugar para novidades rápidas, links e textos maiores no blog — menos “vitrine estática”, mais presença contínua."
+    "Eu era eletricista de obra. Comecei automatizando relatório da engenharia com Python e não parei mais — hoje sou desenvolvedor fullstack, com a automação como o que mais me diferencia.",
+    "Trabalho com React, Next.js e TypeScript no frontend, Supabase e Node.js no backend, e Python pra automação (OCR, geração de relatório) aplicada a engenharia e construção. Meu portfólio resume os projetos que já publiquei.",
+    "Este hub é o devlog: o lugar pra contar o que estou construindo enquanto construo — bastidores, decisões e bugs — e não só o resultado final."
   ],
   whatMoves: [
-    { icon: Terminal, label: "linux & desenvolvimento" },
+    { icon: Terminal, label: "Linux & desenvolvimento" },
     { icon: Coffee, label: "Café & código" },
     { icon: Play, label: "Aprender em público" },
-    { icon: Heart, label: "Bug bounty" },
-    { icon: GitBranch, label: "Github & Git" },
-    { icon: Code2, label: "Desenvolvimento de software e web" }
+    { icon: Bug, label: "Bug bounty" },
+    { icon: GitBranch, label: "GitHub & Git" },
+    { icon: Code2, label: "Automação aplicada à engenharia" }
   ] satisfies MotivationItem[],
   timeline: [
     {
-      year: "2020 - 2022",
-      text: "Iniciando minha jornada na área de tecnologia."
+      year: "Antes de 2024",
+      text: "Técnico em Automação. A base técnica que depois virou ponte pra programação."
     },
     {
-      year: "2022 - 2023",
-      text: "especialização em desenvolvimento de software e web, focado em React, Next.js e TypeScript."
+      year: "Set 2024",
+      text: "Eletricista FC na JL Construtora (obra Vale Tubarão, Serra/ES) — o cargo formal. Na prática, logo passei a apoiar a equipe de engenharia e virei o desenvolvedor fullstack interno."
     },
     {
-      year: "2024 - 2025",
-      text: "Criação da minha primeira startup,(Devloop)- terminou no meio do ano de 2025."
+      year: "2024 – 2025",
+      text: "Devloop, minha primeira startup. Terminou no meio de 2025."
     },
     {
-      year: "2025 - 2026",
-      text: "Inicio do meu canal no youtube, e minha nova etapa dentro da empresa JL construtora - na area de desenvolvimento de software e web."
+      year: "Jan 2025 — hoje",
+      text: "Freelance pela Virex, minha empresa: 10 projetos entregues até agora."
     },
+    {
+      year: "2025 – hoje",
+      text: "Canal no YouTube e Engenharia de Software em curso. Objetivo: sair do formato híbrido eletricista/dev — 100% dev, numa empresa ou na própria Virex."
+    }
   ] satisfies TimelineEntry[]
 };
