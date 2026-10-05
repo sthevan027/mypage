@@ -1,83 +1,81 @@
-# Hub pessoal (mypage)
+# Hub do Sthevan — devlog
 
-![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
+![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs&logoColor=white) ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white) ![MDX](https://img.shields.io/badge/MDX-posts-1B1F24?logo=mdx&logoColor=white)
 
-![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs&logoColor=white) ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Home do hub: perfil, links, bloco Agora e devlog sobre o fundo de curvas de nível](docs/hub-preview.png)
 
-![Preview da home — hub pessoal Sthevan Santos](docs/hub-preview.png)
+**[sthevan-hub.vercel.app](https://sthevan-hub.vercel.app)** — o lugar do **processo**. O trabalho pronto fica no [Portfolio](https://sthevandev.vercel.app); aqui fica o que eu estou construindo, enquanto construo.
 
-Site estático em [Next.js](https://nextjs.org/) (App Router): home com links, feed editorial, integração opcional com GitHub/YouTube, blog em Markdown, página Sobre e Novidades.
+- **Início** — link-in-bio + bloco **"Agora"** (texto curto + atividade do GitHub, atualizada sozinha de hora em hora) + últimos itens do devlog.
+- **Devlog** — **posts** longos em MDX (imagem, GIF, vídeo, código, destaques, índice) e **notas** puxadas dos meus posts no X. Filtro Tudo / Posts / Notas e RSS.
+- **Projetos** (`/projetos`) — meus projetos **open source**, agrupados, com linguagem, estrelas e último push vindos do GitHub (cache de 1 h) e links pros posts do devlog de cada um.
+- **Busca** — `Ctrl/⌘ + K` pula pra qualquer página, post ou link.
+- Visual minimal dev (Geist, preto, azul `#60a5fa`) com **curvas de nível** geradas por código no fundo.
 
-## Requisitos
-
-- [Node.js](https://nodejs.org/) 18+
-- [pnpm](https://pnpm.io/) (recomendado para instalar dependências)
-
-## Instalação
+## Rodar
 
 ```bash
 pnpm install
+pnpm dev        # http://localhost:3000
+pnpm build      # build de produção
+pnpm typecheck
+pnpm lint
 ```
 
-## Scripts
+## Escrever um post
 
-| Comando | Descrição |
-|--------|------------|
-| `pnpm dev` | Servidor de desenvolvimento em [http://localhost:3000](http://localhost:3000) |
-| `pnpm clean` | Remove a pasta `.next` (cache de build; use se aparecer erro ENOENT ou página sem CSS) |
-| `pnpm dev:clean` | `clean` + `dev` em sequência |
-| `pnpm build` | Build de produção |
-| `pnpm start` | Sobe o build após `pnpm build` |
-| `pnpm lint` | ESLint (Next.js) |
+Crie `content/devlog/<slug>.mdx`:
 
-## Onde editar o conteúdo
+```mdx
+---
+title: "Título do post"
+date: "2026-10-03"
+excerpt: "Uma ou duas frases que aparecem na lista."
+project: "Nome do projeto"
+cover: "/devlog/<slug>/capa.png"
+draft: true
+---
+
+Texto em Markdown. Imagens e vídeos ficam em `public/devlog/<slug>/`.
+
+<Figure src="/devlog/<slug>/print.png" alt="Descrição" caption="Legenda" />
+<Figure src="/devlog/<slug>/demo.gif" alt="…" narrow />
+<Video src="/devlog/<slug>/demo.mp4" caption="Legenda" />
+<Callout>Um destaque no meio do texto.</Callout>
+```
+
+- Cada `## Seção` vira um item do índice lateral.
+- **Rascunho:** com `draft: true`, o post aparece em `pnpm dev` e nos **previews** da Vercel, mas **não em produção**. Revisou? Troque pra `draft: false`.
+
+## Adicionar uma nota do X
+
+1. Cole o link do post em [`content/x-links.json`](content/x-links.json) (opcional: `"related": "<slug>"` liga a nota a um post longo).
+2. Rode `pnpm sync:x` — busca o embed público do X (sem login, sem chave, sem custo), expande os links `t.co` e grava [`content/x-notes.json`](content/x-notes.json).
+3. Commit. O site não chama o X quando alguém abre a página.
+
+## Onde editar
 
 | O quê | Onde |
-|--------|------|
-| Nome, bio, links, redes (LinkedIn, X, Threads), RSS do YouTube (futuro) | [`data/site.ts`](data/site.ts) |
-| Os **3 repositórios** em destaque na home | Campo `github.featuredRepoNames` em [`data/site.ts`](data/site.ts) (nomes exatos como no GitHub) |
-| “Últimos posts” de X / Threads na home | [`content/redes-feed.json`](content/redes-feed.json) — **manual** (sem API pública estável; edite título, link do post e data) |
-| Texto da página Sobre, “O que me move”, timeline | [`data/sobre.ts`](data/sobre.ts) |
-| Posts do blog | Arquivos `.md` em [`content/blog/`](content/blog/) com frontmatter (`title`, `date`, `excerpt`, `category`, `readingMinutes`) |
-| Novidades / changelog curto | [`content/novidades.json`](content/novidades.json) |
-| Foto de perfil | Coloque a imagem em `public/` (ex.: `public/foto-perfil.jpg`) e ajuste `avatar` em `data/site.ts` |
+|---|---|
+| Nome, frase, links | [`data/site.ts`](data/site.ts) |
+| Bloco "Agora" (texto) | [`data/agora.ts`](data/agora.ts) — atualize também `updatedAt` |
+| Sobre | [`data/sobre.ts`](data/sobre.ts) |
+| Projetos open source | [`data/projetos.ts`](data/projetos.ts) — **lista de permissão**: só aparece o que está lá (nada de cliente/trabalho entra sozinho) |
+| Fundo de curvas de nível | [`scripts/gen-topo.mjs`](scripts/gen-topo.mjs) → `pnpm gen:topo` (troque a `SEED` pra outro desenho) |
 
-## Rotas principais
+O GitHub do "Agora" funciona sem token (limite de 60 req/h, com cache de 1 h). Pra subir o limite, defina `GITHUB_TOKEN` nas variáveis de ambiente da Vercel.
 
-- `/` — Home (hero, feed, projetos GitHub, grade de links)
-- `/blog` — Listagem de posts
-- `/blog/[slug]` — Post (slug = nome do arquivo sem `.md`)
-- `/sobre` — Sobre mim
-- `/novidades` — Lista de novidades
+## Estrutura
 
-## YouTube (opcional)
-
-Com `youtubeRssUrl` vazio em `data/site.ts`, o feed usa só posts editoriais. Quando quiser vídeos automáticos, preencha com o RSS do canal; o código em [`lib/youtube.ts`](lib/youtube.ts) já está preparado.
-
-## Erro `ENOENT` em `.next\\server\\vendor-chunks\\...` ou página sem estilo (fundo branco)
-
-Isso costuma ser **cache do Next corrompido** (servidor fechado no meio do build, troca de branch, etc.).
-
-1. Pare o `pnpm dev` (Ctrl+C no terminal).
-2. Na raiz do projeto:
-
-```bash
-pnpm clean
-pnpm dev
+```
+app/                 páginas (/, /devlog, /devlog/[slug], /agora, /sobre, rss, sitemap)
+components/          nav, paleta Ctrl+K, painel Agora, itens do devlog, componentes MDX
+content/devlog/      posts (.mdx)
+content/x-*.json     notas do X (links → notas sincronizadas)
+data/                textos editáveis (perfil, Agora, sobre)
+lib/                 devlog (posts/notas/rascunhos), github (atividade), formatação
+scripts/             gen-topo (fundo), sync-x-notes (notas do X)
+docs/superpowers/    spec e plano do hub v2
 ```
 
-3. No navegador, faça um **hard refresh** (Ctrl+F5) em `http://localhost:3000`.
-
-Se ainda falhar, rode `pnpm install` de novo e repita o passo 2.
-
-## Problemas no editor (“Cannot find module”, muitos erros no Problems)
-
-1. Rode `pnpm install` na raiz do repositório.
-2. No VS Code / Cursor: **Ctrl+Shift+P** → **TypeScript: Select Workspace Version** (use a versão em `node_modules/typescript`).
-3. Recarregue a janela se os avisos persistirem.
-
-Arquivos como `LICENSE` podem ser marcados por extensões de ortografia ou Markdown; o projeto não depende deles para o build.
-
-## Licença
-
-Veja [LICENSE](LICENSE).
+Rotas antigas redirecionam: `/blog` → `/devlog`, `/novidades` → `/agora`.

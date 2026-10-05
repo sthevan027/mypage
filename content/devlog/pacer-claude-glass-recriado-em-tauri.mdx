@@ -1,0 +1,95 @@
+---
+title: "Pacer: recriei o Claude Glass do zero pra mostrar pra onde o seu ritmo te leva"
+date: "2026-10-04"
+excerpt: "Um widget do Windows que mostra o uso do plano do Claude e prevê se o limite acaba antes da redefinição. Do Electron com pet de pixel art ao Tauri com Rust — e a barra vermelha com 22% de uso."
+project: "Pacer"
+cover: "/devlog/pacer-claude-glass-recriado-em-tauri/capa.png"
+draft: false
+---
+
+O plano do Claude tem um limite de sessão de 5 horas e um limite semanal. Eu queria olhar pro canto da tela e saber duas coisas: quanto já usei e — a que mais importa — **pra onde o ritmo atual me leva** antes da redefinição.
+
+Esse é o **Pacer**: [github.com/sthevan027/pacer](https://github.com/sthevan027/pacer), código aberto (MIT).
+
+<Figure src="/devlog/pacer-claude-glass-recriado-em-tauri/pacer-main.png" alt="Widget do Pacer com a sessão de 5 horas em 58%, o semanal em 28% e o mapa de atividade de 30 dias" caption="O Pacer: sessão e semana, a previsão de ritmo e os últimos 30 dias." narrow />
+
+## De onde ele veio
+
+O Pacer não nasceu do nada: ele é o **Claude Glass recriado do zero**. O Claude Glass era um widget de desktop em **Electron** que mostrava o uso do Claude Code, com um **pet de pixel art**. Foi crescendo: a `v1.1.0` ganhou um bloqueio contra a barra de tarefas do Windows, a `v1.2.0` um ícone na bandeja e um ajuste que cortou ~9% da memória, a `v1.2.1` (25/09) o ícone próprio do app.
+
+Mas ele tinha dois problemas de base:
+
+- **O peso.** O Claude Glass, em Electron, usava ~465 MB de RAM.
+- **O jeito de pegar o login.** O token ficava salvo em texto puro, uma pendência antiga que eu nunca resolvi direito.
+
+Em 03/10 decidi **recriar tudo**. A inspiração do formato foi o [ai-usagebar](https://github.com/akitaonrails/ai-usagebar), do Akita.
+
+## As decisões
+
+- **Tauri 2 + Rust + React + TypeScript**, com Bun no lugar do npm. Sai o Electron.
+- **Sem login próprio.** O Pacer lê o login que o Claude Code já tem no PC, **só pra leitura**. Ele não renova o token — de propósito, pra não deslogar o Claude Code. Isso resolveu o token em texto puro.
+- **Mapa de 30 dias**, em grade estilo GitHub. São 30 porque o Claude Code apaga os logs com mais de 30 dias.
+- **Sem o pet** (ele fica no histórico do git).
+- **Um visual sem "cara de IA":** nada de emoji, nada de brilho girando. Tema escuro, um azul de destaque e ícones de traço.
+- **O nome.** Os finalistas eram Pacer e Nivo. O Nivo caiu porque colide com a biblioteca de gráficos React *nivo*.
+
+<Figure src="/devlog/pacer-claude-glass-recriado-em-tauri/pacer-settings.png" alt="Tela de configurações do Pacer: iniciar com o Windows, intervalo de atualização, limiares de alerta e provedores" caption="Configurações: alertas por limiar e a lista de provedores (por enquanto só o Claude)." narrow />
+
+## A previsão de ritmo
+
+A parte que me interessava de verdade: uma **marca branca na barra** mostra onde eu vou estar na hora da redefinição. Se o ritmo atual estoura o limite antes disso, aparece em laranja **"Nesse ritmo, acaba em 39m"**. Os alertas do Windows disparam ao passar de cada limiar e quando a previsão indica que o limite acaba antes da redefinição.
+
+## O bug da barra vermelha com 22% de uso
+
+Numa das primeiras versões, a barra ficava **vermelha com apenas 22% de uso**. Parecia errado, e era: a cor estava misturada com a previsão. Se a previsão estourava, pintava de vermelho, mesmo com o uso baixo. Isso passa a ideia de "você gastou quase tudo" quando você gastou pouco.
+
+Separei as duas coisas. Agora **só o uso decide a cor**, nas barras e no ícone da bandeja:
+
+- azul até 70%;
+- gradiente de laranja a vermelho entre 70% e 90%;
+- vermelho a partir de 90%.
+
+Já a previsão virou o aviso em laranja, "Nesse ritmo, acaba em…", sem mexer na cor da barra.
+
+## Feito com plano, testes e revisão
+
+Escrevi um plano de **16 tarefas** e executei com testes: **65 testes em Rust e 14 em TypeScript** passando. No fim, uma revisão da branch inteira achou **0 problemas críticos e 4 importantes**, que corrigi (cada um com um teste que falhava antes):
+
+- o "Atualizar agora" era descartado se apertado dentro de 60 segundos;
+- o alerta de previsão ficava repetindo perto do limite (resolvi com histerese);
+- um cartão desatualizado nunca sumia (um detalhe de CSS);
+- os limiares se fundiam na barra.
+
+## Depois de instalar, os bugs de verdade
+
+Instalei no meu PC e usei. Dois problemas que a revisão não pegaria:
+
+- **Precisava de dois cliques na bandeja.** O clique alternava mostrar/esconder pelo estado "visível", mas o widget, ficando no fundo da área de trabalho, conta como visível mesmo coberto — então o primeiro clique **escondia**. Agora o clique sempre traz o widget pra frente.
+- **A memória.** Medi quatro cenários em vez de chutar:
+
+| Cenário | Memória privada |
+|---|---|
+| Como estava | 254 MB |
+| WebView2 em modo de memória baixa | 236 MB |
+| + sem GPU | **181 MB** |
+
+Adotei as duas opções (a versão instalada mede ~186 MB), e o visual ficou idêntico. É menos da metade do Claude Glass (~465 MB) — mas **não os 30–60 MB que eu tinha estimado antes**. A estimativa estava errada: o processo Rust usa ~12 MB, e o resto é o WebView2, em seis processos. O instalador, por outro lado, tem só **2,2 MB**.
+
+## Versões
+
+- **`v2.0.0`** (03/10): o Pacer, com o widget fixo no canto superior direito da tela, atrás das janelas. Saiu **sem assinatura**, e o README avisava.
+- **`v2.0.1`** (04/10): o clique único na bandeja, a memória menor e o instalador **assinado** com um certificado meu. Como ele é autoassinado, o Windows ainda pode avisar "protegeu o computador" (*Mais informações → Executar assim mesmo*), e a release inclui o certificado raiz pra quem quiser que o Windows o reconheça.
+
+## O que falta
+
+- **Só o Claude, por enquanto.** O que fiz foi a etapa A: o Claude mais a arquitetura pra vários provedores. A próxima etapa é adicionar outros provedores (a tela de configurações já tem o "Adicionar provedor (em breve)").
+- **Uma lista de pequenos ajustes adiados da revisão**, como ler só o que foi acrescentado no log da sessão ativa, em vez de reler o arquivo inteiro a cada 10 segundos.
+- **Requisito:** Windows 10 ou 11, com o Claude Code instalado e logado.
+
+## O que eu levo disso
+
+- **Quando o problema está na base, recriar pode compensar.** Peso e login eram defeitos da arquitetura.
+- **Meça, não estime.** Eu esperava 30–60 MB; deu 186 MB. Foram as medições que mostraram onde estava o peso.
+- **Separar "quanto usei" de "pra onde vou" resolveu a confusão da cor.**
+
+Código, instalador e releases: [github.com/sthevan027/pacer](https://github.com/sthevan027/pacer).

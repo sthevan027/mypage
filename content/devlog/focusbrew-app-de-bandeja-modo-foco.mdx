@@ -1,0 +1,89 @@
+---
+title: "focusbrew: um app de bandeja que liga o modo foco sozinho"
+date: "2026-10-04"
+excerpt: "Ele percebe quando estou programando com IA, bloqueia o que distrai e mantém um timer com pausa-café. Como foi feito em Tauri e Rust, e o bug de travamento que o Windows fechava no meio do trabalho."
+project: "focusbrew"
+cover: "/devlog/focusbrew-app-de-bandeja-modo-foco/capa.png"
+draft: false
+---
+
+Quando eu abro o VS Code ou o Claude Code, eu quero trabalhar. Só que o Discord e a Steam estão ali, a uma aba de distância. A ideia do **focusbrew** é simples: ele fica na bandeja, percebe que eu comecei a trabalhar e **liga o modo foco sozinho** — fecha os apps que distraem e silencia as notificações.
+
+A ideia foi minha, de 08/09/2026, e o código é aberto (licença MIT): [github.com/sthevan027/focusbrew](https://github.com/sthevan027/focusbrew).
+
+<Callout>
+Os prints deste post usam **dados de demonstração** (as tarefas, o histórico do GitHub e os tempos são de exemplo), as mesmas imagens do README.
+</Callout>
+
+## Como ele funciona
+
+A cada segundo, o app confere quais processos da lista de **monitorados** estão abertos — por padrão, o VS Code, o Cursor e o Claude Code. Se algum está, o estado vira *trabalhando*. Com o foco automático ligado, aí acontece o seguinte:
+
+1. fecha os apps da lista de **bloqueados** (Discord, Steam…);
+2. liga o Não Perturbe do Windows;
+3. começa um timer de foco de 50 minutos, seguido de uma **pausa-café** de 10 (nessa pausa o bloqueio é suspenso).
+
+<Figure src="/devlog/focusbrew-app-de-bandeja-modo-foco/widget-expandido.png" alt="Widget expandido com timer em 18:42, lista de tarefas e heatmap de sequência de dias" caption="O widget, no topo da tela: timer, tarefas e a sequência de dias de contribuição no GitHub." />
+
+Na bandeja, o ícone muda conforme o estado, e vira uma xícara durante a pausa. O widget fica no topo da tela, no estilo "notch", com um anel de progresso, um atalho global (`Ctrl+Shift+Space`) e uma versão colapsada bem pequena:
+
+<Figure src="/devlog/focusbrew-app-de-bandeja-modo-foco/widget.png" alt="Widget colapsado com 18:42 e a tarefa atual" caption="O widget colapsado." narrow />
+
+O painel completo mostra o resumo do dia — tempo de foco, descanso, ciclos e **quais apps ficaram mais tempo abertos** — e a aba do GitHub traz os PRs e issues abertos:
+
+<Figure src="/devlog/focusbrew-app-de-bandeja-modo-foco/painel.png" alt="Painel em modo foco com resumo do dia e heatmap do GitHub" caption="O painel, com o visual “espresso”: marrom-café e âmbar." narrow />
+
+## A escolha da stack
+
+É um app de bandeja, então precisa ser leve. Usei **Tauri v2**, com o núcleo em **Rust** (leitura de processos, bloqueio, registro do Windows, atalho global) e a interface em **React + TypeScript**. O resultado é um app nativo que gasta pouco quando está parado — o que importa, porque ele roda o dia inteiro.
+
+## O bug que fazia o Windows fechar o app
+
+Esse foi o mais interessante. Eu usava o focusbrew e, de vez em quando, **ele travava e sumia**. No log de eventos do Windows, o motivo aparecia como `AppHangB1` (Application Hang): o Windows fecha um app quando a thread principal para de responder.
+
+A causa era um **deadlock**:
+
+- o loop de fundo pegava o *lock* do estado do app e, com ele preso, chamava a atualização do ícone da bandeja;
+- no Tauri 2, essa atualização, quando chamada fora da thread principal, **agenda a tarefa na thread principal e fica esperando a resposta**;
+- só que a thread principal também precisa do mesmo *lock* — ela atende o menu da bandeja, o atalho global e os comandos sem `async`.
+
+Quando os dois coincidiam, um esperava o outro pra sempre.
+
+Pra ter certeza de que era isso, eu **reproduzi o travamento**: um script em PowerShell que apertava o atalho `Ctrl+Shift+Space` a cada ~170 ms e conferia se a janela ainda respondia. A versão antiga travou depois de **10 a 30 apertos**. Depois da correção, passou de **150**.
+
+```rust
+// Versão simplificada, só pra mostrar a ideia (não é o código literal).
+// Antes: chamava o tray direto, com o lock preso, e esperava a thread principal.
+// Agora: agenda a atualização da bandeja e segue, sem esperar.
+app.run_on_main_thread(move || {
+    // atualiza o ícone aqui, na própria thread principal
+})?;
+```
+
+A correção foi agendar a atualização da bandeja com `run_on_main_thread` em vez de esperar por ela. De quebra, deixei o loop mais leve: ele não varre mais todos os processos duas vezes por segundo, e o ícone só é trocado quando muda de verdade. O processador do app parado em modo foco caiu de **~28 para ~10 ms por segundo**.
+
+## Outros bugs que apareceram usando de verdade
+
+- **Crash ao abrir uma segunda instância** do app (o atalho global era registrado duas vezes).
+- **Texto longo de uma tarefa invadindo a coluna** da sequência de dias no widget (faltava um `min-width: 0` num flex).
+- **Tempo de foco perdido** quando eu parava a sessão no meio ou fechava o app, porque só a conclusão natural do bloco era gravada.
+
+## Instalador de um clique
+
+Pra ser fácil de instalar, fiz um instalador NSIS no mesmo molde do [PR Indicator](/devlog/pr-indicator-do-gnome-ao-windows): instala só pro usuário atual, **sem pedir administrador**, cria os atalhos e abre o app ao terminar. A release `v0.1.1` (04/10) saiu assinada com um certificado meu. Como ele é autoassinado, o Windows pode mostrar o aviso do SmartScreen na primeira vez ("Mais informações → Executar assim mesmo").
+
+Já na branch principal (depois da `v0.1.1`), a aba do GitHub passou a usar o login do `gh` CLI (ou um token), e a lista atualiza ao abrir e a cada 5 minutos.
+
+## O que ainda é frágil
+
+- **A detecção é por processo, não por atividade.** O app sabe que o Claude Code está *aberto*, não que a IA está *processando agora*. Uma integração mais precisa (um hook do Claude Code ou uma extensão do VS Code) é uma melhoria futura.
+- **O Não Perturbe usa uma chave de registro que a Microsoft não documenta** — a mesma que a tela do Focus Assist escreve. Funciona nas versões que testei, mas pode quebrar em builds futuras do Windows. Se quebrar, o resto do modo foco (o bloqueio de apps) continua funcionando.
+- **Linux e macOS** têm o modo foco como "melhor esforço", e eu não testei neles.
+
+## O que eu levo disso
+
+- **Reproduza o bug antes de corrigir.** O script que apertava o atalho em loop transformou um travamento "de vez em quando" em algo que eu conseguia ver quebrar e ver parar de quebrar.
+- **Cuidado com esperar uma thread segurando um lock.** É o clássico de deadlock, e fácil de cair em app com interface.
+- **Dá pra ser leve e nativo.** O Tauri entregou o app pequeno que eu queria, com a interface em React.
+
+O código e a release estão em [github.com/sthevan027/focusbrew](https://github.com/sthevan027/focusbrew).

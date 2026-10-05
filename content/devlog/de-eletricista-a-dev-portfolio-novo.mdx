@@ -1,0 +1,51 @@
+---
+title: "De eletricista de obra a dev: o portfólio novo"
+date: "2026-10-02"
+excerpt: "Refiz meu portfólio do zero pra contar a história certa — de quem veio da obra e foi parar no código — com números de verdade, SEO e Lighthouse no talo."
+project: "Portfolio"
+cover: "/devlog/de-eletricista-a-dev-portfolio-novo/portfolio-og.png"
+draft: false
+---
+
+Eu era eletricista de obra. Comecei automatizando relatório da engenharia com Python e não parei mais. O portfólio antigo não contava essa história — então refiz do zero.
+
+<Figure src="/devlog/de-eletricista-a-dev-portfolio-novo/portfolio-og.png" alt="Cartão do portfólio: Sthevan Santos, desenvolvedor fullstack que veio da obra" caption="A identidade nova: placa de sinalização de canteiro." />
+
+## Posicionamento primeiro
+
+Antes de mexer em cor ou fonte, a pergunta foi: **quem eu sou pra quem chega ali?** A resposta virou a frase do topo — "desenvolvedor fullstack que veio da obra". Fullstack + automação, porque é isso que eu faço de verdade: React, TypeScript, Supabase no web, e Python automatizando processo de engenharia.
+
+## Números de verdade
+
+O portfólio ganhou um quadro de resultados, e todo número ali tem origem real:
+
+- **ART (Anotação de Responsabilidade Técnica) de 5 dias pra meio dia.**
+- **Relatórios: de 1 pra 3 por dia.**
+- **10 entregas pela Virex**, meu trabalho como freelancer.
+- **21 projetos** no portfólio, com a stack real de cada um.
+
+No caminho, saíram coisas que estavam lá e não eram verdade — um "+30 projetos" e uma linha do tempo que não batia com a minha trajetória. A trajetória certa ficou: Técnico em Automação → JL Construtora → Virex → Engenharia de Software.
+
+## Uma identidade que lembra de onde eu vim
+
+O visual é "sinalização de canteiro": amarelo de segurança, preto de placa, faixa zebrada, títulos em Barlow Condensed. É o tipo de placa que eu via todo dia na obra — e diz, antes de qualquer texto, de onde eu venho.
+
+<Callout>
+Repara no contraste com este hub: o portfólio é a **obra entregue**, com a cara da obra. Aqui no devlog o visual é 100% dev — é onde fica o processo.
+</Callout>
+
+## Performance e SEO
+
+Não adianta ficar bonito e lento. Os números do Lighthouse:
+
+| Página | Desktop | Mobile |
+|---|---|---|
+| Home | 100 / 100 / 100 / 100 | 98 / 100 / 100 / 100 |
+
+O que mais pesou no mobile foi a **fonte**: a troca de fonte estava virando o maior elemento da página a carregar. Reduzi de 7 pra 4 arquivos de fonte e o LCP caiu de 2,7 s pra 2,4 s. No SEO: `robots`, `sitemap`, imagem de compartilhamento 1200×630 e dados estruturados de pessoa e de projetos.
+
+## Prints reais
+
+Cada projeto ganhou print de verdade da aplicação rodando — os que mexem com dados sensíveis rodaram com dados simulados. Card sem imagem passa a impressão de projeto que não existe.
+
+O resultado está em [sthevandev.vercel.app](https://sthevandev.vercel.app).

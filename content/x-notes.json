@@ -1,0 +1,105 @@
+[
+  {
+    "id": "2106427642974970328",
+    "url": "https://x.com/SantosSthevan/status/2106427642974970328",
+    "date": "2026-10-03T16:54:20.275Z",
+    "author": "Sthevan.Dev",
+    "handle": "SantosSthevan",
+    "text": "Fiz o PR Indicator: seus PRs do GitHub na barra do sistema. Passa o mouse e vê quantos esperam sua revisão; clica e abre a lista.\n\nEra só extensão do GNOME. Agora tem versão pra Windows com o mesmo visual, 4 temas e instalador.\n\nOpen source 👇 https://github.com/sthevan027/gnome-pr-indicator",
+    "links": [
+      "https://github.com/sthevan027/gnome-pr-indicator"
+    ],
+    "hasMedia": true,
+    "related": "pr-indicator-do-gnome-ao-windows"
+  },
+  {
+    "id": "2106121674538004603",
+    "url": "https://x.com/SantosSthevan/status/2106121674538004603",
+    "date": "2026-10-02T20:38:31.715Z",
+    "author": "Sthevan.Dev",
+    "handle": "SantosSthevan",
+    "text": "Eu era eletricista de obra. Comecei automatizando relatório da engenharia com Python e não parei mais.\n\nPortfólio novo no ar:\n→ ART de 5 dias pra meio dia\n→ 21 projetos (React, TS, Supabase, Python)\n→ 10 entregas pela Virex https://sthevandev.vercel.app/",
+    "links": [
+      "https://sthevandev.vercel.app/"
+    ],
+    "hasMedia": true,
+    "related": "de-eletricista-a-dev-portfolio-novo"
+  },
+  {
+    "id": "2102143844481405316",
+    "url": "https://x.com/SantosSthevan/status/2102143844481405316",
+    "date": "2026-09-21T21:12:03.125Z",
+    "author": "Sthevan.Dev",
+    "handle": "SantosSthevan",
+    "text": "Cansei de trocar de aba só pra ver se tinha PR esperando revisão — fiz uma extensão pro GNOME Shell: indicador na barra superior com PRs aguardando revisão + PRs que abri, popup com a lista, atualiza a cada 60s. https://github.com/sthevan027/gnome-pr-indicator",
+    "links": [
+      "https://github.com/sthevan027/gnome-pr-indicator"
+    ],
+    "hasMedia": true,
+    "related": "pr-indicator-do-gnome-ao-windows"
+  },
+  {
+    "id": "2044229901843083705",
+    "url": "https://x.com/SthevanCode/status/2044229901843083705",
+    "date": "2026-04-15T01:42:43.211Z",
+    "author": "Desenvolvedor FDP",
+    "handle": "SthevanCode",
+    "text": "Resumo do meu dia.\nFoi realiza 3 revisões de PR no dia e 2 análise e tratamento de dados.\n\n- Realização revisão de um PR, sobre melhoria e atualização do Dashboard. O outro PR foi sobre melhoria de logs e lógica do código.\n\n- realizando o tratamento e a organização de dados.",
+    "links": [],
+    "hasMedia": true
+  },
+  {
+    "id": "2043703777555820746",
+    "url": "https://x.com/SthevanCode/status/2043703777555820746",
+    "date": "2026-04-13T14:52:05.406Z",
+    "author": "Desenvolvedor FDP",
+    "handle": "SthevanCode",
+    "text": "Acabei de desenvolver minha página de postagem de blogs e notícias.\n\nFarei postagens sobre minha rotina e bola TEC. https://sthevandev.vercel.app/",
+    "links": [
+      "https://sthevandev.vercel.app/"
+    ],
+    "hasMedia": false
+  },
+  {
+    "id": "2043540119546671484",
+    "url": "https://x.com/SthevanCode/status/2043540119546671484",
+    "date": "2026-04-13T04:01:46.296Z",
+    "author": "Desenvolvedor FDP",
+    "handle": "SthevanCode",
+    "text": "Só vou compra domínio depois de 10 usuários ativos",
+    "links": [],
+    "hasMedia": false
+  },
+  {
+    "id": "2043539962222493816",
+    "url": "https://x.com/SthevanCode/status/2043539962222493816",
+    "date": "2026-04-13T04:01:08.787Z",
+    "author": "Desenvolvedor FDP",
+    "handle": "SthevanCode",
+    "text": "desenvolvi um sistema de previsão de salário em cima de espelho de ponto.\nEstá na fases iniciais, quem pode entra para dar uma testa e me passar um feedback agradeço!! https://meu-salario-lime.vercel.app/",
+    "links": [
+      "https://meu-salario-lime.vercel.app/"
+    ],
+    "hasMedia": false
+  },
+  {
+    "id": "2041594262890958967",
+    "url": "https://x.com/SantosSthevan/status/2041594262890958967",
+    "date": "2026-04-07T19:09:37.917Z",
+    "author": "Sthevan.Dev",
+    "handle": "SantosSthevan",
+    "text": "•Dia de PR review. 36 arquivos. Tudo alinhado. Testes passando.\n•Review de PR + refatoração + testes verdes. Seguimos.\n•PR grande revisado hoje. Código mais limpo, sistema mais sólido.",
+    "links": [],
+    "hasMedia": true
+  },
+  {
+    "id": "2039063089488818259",
+    "url": "https://x.com/SantosSthevan/status/2039063089488818259",
+    "date": "2026-03-31T19:31:39.151Z",
+    "author": "Sthevan.Dev",
+    "handle": "SantosSthevan",
+    "text": "Troquei .map() por <For /> no JSX hoje.\n\nMesma lógica.\nMuito mais legível.\nPequenas decisões = código muito melhor.#frontend #dev #programacao #cleancode #solidjs",
+    "links": [],
+    "hasMedia": true
+  }
+]

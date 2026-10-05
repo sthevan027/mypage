@@ -1,67 +1,58 @@
-import { ArrowLeft } from "lucide-react";
-import type { Metadata } from "next";
+import type {Metadata} from "next";
 import Image from "next/image";
-import Link from "next/link";
 
-import { siteData } from "@/data/site";
-import { sobreData } from "@/data/sobre";
-import styles from "@/styles/sobre.module.css";
+import {siteData} from "@/data/site";
+import {sobreData} from "@/data/sobre";
 
 export const metadata: Metadata = {
   title: "Sobre",
-  description: "Bio resumida, o que me move e trajetória."
+  description: "Quem é o Sthevan, o que move o trabalho dele e a trajetória até aqui."
 };
 
 export default function SobrePage() {
   return (
-    <main className={styles.page}>
-      <Link className={styles.back} href="/">
-        <ArrowLeft size={18} aria-hidden />
-        Voltar ao início
-      </Link>
+    <>
+      <div className="topo topo--faint" aria-hidden="true" />
+      <main className="container" style={{maxWidth: 760}}>
+        <header className="page-head">
+          <Image className="profile__avatar" src={siteData.avatar} alt={siteData.name} width={72} height={72} />
+          <h1>{sobreData.heroTitle}</h1>
+          <p>{sobreData.heroSubtitle}</p>
+        </header>
 
-      <header className={styles.hero}>
-        <div className={styles.avatarWrap}>
-          <Image
-            alt={siteData.name}
-            className={styles.avatar}
-            fill
-            sizes="140px"
-            src={siteData.avatar}
-          />
-        </div>
-        <h1>{sobreData.heroTitle}</h1>
-        <p className={styles.subtitle}>{sobreData.heroSubtitle}</p>
-      </header>
+        <div className="about">
+          <section className="panel">
+            {sobreData.bio.map(paragraph => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </section>
 
-      <div className={styles.bio}>
-        {sobreData.bio.map((paragraph, index) => (
-          <p key={index}>{paragraph}</p>
-        ))}
-      </div>
-
-      <p className={styles.sectionEyebrow}>O que me move</p>
-      <div className={styles.movesGrid}>
-        {sobreData.whatMoves.map((item) => {
-          const Icon = item.icon;
-          return (
-            <div key={item.label} className={styles.moveCard}>
-              <Icon size={20} aria-hidden />
-              <span>{item.label}</span>
+          <section className="panel" aria-labelledby="move-title">
+            <h2 className="eyebrow" id="move-title" style={{margin: "0 0 12px"}}>
+              O que me move
+            </h2>
+            <div className="chips">
+              {sobreData.whatMoves.map(item => (
+                <span key={item.label}>{item.label}</span>
+              ))}
             </div>
-          );
-        })}
-      </div>
+          </section>
 
-      <p className={styles.sectionEyebrow}>Trajetória</p>
-      <div className={styles.timeline}>
-        {sobreData.timeline.map((entry, index) => (
-          <div key={`${entry.year}-${index}`} className={styles.timelineItem}>
-            <span className={styles.timelineYear}>{entry.year}</span>
-            <p className={styles.timelineText}>{entry.text}</p>
-          </div>
-        ))}
-      </div>
-    </main>
+          <section className="panel" aria-labelledby="timeline-title">
+            <h2 className="eyebrow" id="timeline-title" style={{margin: "0 0 4px"}}>
+              Trajetória
+            </h2>
+            <ul className="timeline">
+              {sobreData.timeline.map(entry => (
+                <li key={entry.year}>
+                  <span className="mono">{entry.year}</span>
+                  <span>{entry.text}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+      </main>
+    </>
   );
 }
