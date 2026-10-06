@@ -1,0 +1,110 @@
+---
+title: "focusbrew v0.3: de modo foco a tracker do dia"
+date: "2026-10-06"
+excerpt: "Joguei fora o modo foco e transformei o focusbrew num tracker do dia: tarefas por dia com timer, resumo do que fiz e PRs do GitHub virando tarefa. E o travamento que eu só resolvi quando parei de redimensionar a janela."
+project: "focusbrew"
+cover: "/devlog/focusbrew-v0-3-tracker-do-dia/capa.png"
+draft: true
+---
+
+Dois dias atrás eu escrevi aqui sobre o [focusbrew como app de modo foco](/devlog/focusbrew-app-de-bandeja-modo-foco): ele percebia que eu tinha aberto o editor, fechava o Discord e ligava o Não Perturbe. Funcionava, mas no fim do dia ele não respondia a pergunta que eu mais queria responder: **o que eu fiz hoje, e quanto tempo levou?**
+
+Então mudei a ideia do app. A v0.3 saiu em 05/10 e o focusbrew agora é um **tracker do dia pra quem programa**, morando num widget colado no topo da tela. O visual foi inspirado no [daily-notch-tracker](https://github.com/lucianodiisouza/daily-notch-tracker) (só a ideia e o visual; nenhum código foi copiado).
+
+O código é aberto (licença MIT): [github.com/sthevan027/focusbrew](https://github.com/sthevan027/focusbrew).
+
+<Callout>
+Os prints deste post usam **dados de demonstração** (tarefas, tempos e o histórico do GitHub são de exemplo), as mesmas imagens do README.
+</Callout>
+
+## O que saiu
+
+O modo foco inteiro: a detecção por processo, o bloqueio de apps, o Não Perturbe e a pausa-café. Eram justamente as partes que eu tinha listado como frágeis no post anterior: a detecção sabia que o editor estava *aberto*, não que eu estava *trabalhando*, e o Não Perturbe dependia de uma chave de registro que a Microsoft não documenta.
+
+## Como ficou
+
+Parado, o widget é só uma barra fina no topo da tela. Quando dou play numa tarefa, ela vira uma caixa com a contagem e o nome da tarefa, e uma linha vai enchendo em volta:
+
+<Figure src="/devlog/focusbrew-v0-3-tracker-do-dia/widget-rodando.png" alt="Widget no topo da tela com a contagem 34:19 e o nome da tarefa" caption="Rodando: a linha azul em volta é o progresso do bloco." narrow />
+
+Passando o mouse, abre o painel. Clicando na barra, ele fica **fixado** até eu apertar Esc ou clicar fora.
+
+<Figure src="/devlog/focusbrew-v0-3-tracker-do-dia/painel.png" alt="Painel com as tarefas de hoje e a grade Activity" caption="As tarefas de hoje. A de cima veio de um PR; a terceira ficou de ontem e veio pra hoje sozinha." />
+
+O que mudou de verdade:
+
+- **Cada dia tem a sua lista.** Navego pelos dias no cabeçalho, planejo o futuro, e **arrasto uma tarefa até um quadrado da grade** pra mandá-la pra aquele dia. O que não foi feito rola pra hoje com uma marquinha "de 04/10".
+- **Projeto no próprio texto:** "Corrigir login #virex" vira a tarefa "Corrigir login" no projeto virex.
+- **A grade Activity** mostra 5 semanas, incluindo a próxima, pra planejar. Clicar num dia abre aquele dia.
+
+### O resumo do dia
+
+Essa era a parte que faltava. Pra ela existir, o app passou a guardar **cada bloco de trabalho** que termina: qual tarefa, qual projeto, quanto tempo. O resumo junta isso com o que aconteceu no GitHub naquele dia:
+
+<Figure src="/devlog/focusbrew-v0-3-tracker-do-dia/painel-resumo.png" alt="Resumo do dia com tempo por tarefa, eventos do GitHub e total por projeto" caption="Tempo por tarefa, o que eu concluí, commits e PRs do dia, e o total por projeto." />
+
+Um detalhe curioso: a API de eventos do GitHub passou a mandar os PRs sem título. O app completa o título com a lista de PRs abertos e com as tarefas que já vieram do GitHub.
+
+### PRs que já são tarefa
+
+A aba GitHub lista os PRs e issues abertos que me envolvem. Um PR que **já virou tarefa** mostra pra qual dia está planejado e oferece trazer pro dia aberto, em vez de duplicar:
+
+<Figure src="/devlog/focusbrew-v0-3-tracker-do-dia/painel-github.png" alt="Aba GitHub com um PR marcado como tarefa de hoje e outros com o botão + hoje" caption="O #5 já é tarefa de hoje; os outros podem virar tarefa com um clique." />
+
+## O travamento que eu só resolvi parando de redimensionar
+
+Com o painel novo pronto, eu testei e achei tudo **travando**. Abrir e fechar o painel dava um engasgo visível.
+
+Em vez de chutar, medi. Fiz um script em PowerShell que move o mouse pro topo da tela e lê a posição da janela do widget o mais rápido possível (`GetWindowRect`), mais um que tira prints da tela em sequência. O resultado:
+
+1. A janela crescia com `set_size` e depois ia pro centro com `set_position`, em **duas chamadas separadas**. Durante um quadro ela aparecia com o tamanho novo **75 px fora do lugar**, e no fechamento o mesmo, ao contrário.
+2. O conteúdo trocava antes de a janela mudar de tamanho, então por um instante o painel era desenhado numa janela pequena demais.
+3. Juntei as duas chamadas numa só (`SetWindowPos`, direto na API do Windows) e o salto sumiu. Só que os prints mostraram outra coisa: depois de redimensionar, o **WebView2 levava uns 95 ms pra pintar de novo**. Enquanto a janela mudasse de tamanho, sempre ia ter engasgo.
+
+A solução foi **parar de redimensionar**. A janela agora tem sempre o tamanho do painel aberto. Ela fica "atravessável" pelo mouse, então o clique passa direto pro que está embaixo, e um loop no Rust confere a posição do cursor a cada 30 ms pra liberar o mouse só quando ele está em cima da barra ou da caixa. A barra, a caixa e o painel viraram **uma forma só, animada em CSS**:
+
+```rust
+// Versão simplificada, só pra mostrar a ideia (não é o código literal).
+// A cada 30 ms: o mouse atravessa a janela, a não ser que esteja
+// em cima da forma visível (ou que o painel esteja aberto).
+let atravessa = !painel_aberto && !zona.contem(cursor);
+if atravessa != antes {
+    janela.set_ignore_cursor_events(atravessa)?;
+}
+```
+
+Medi o custo desse loop: o app parado ficou em **0,9% de um núcleo**, e isso ainda no build de desenvolvimento. O painel abre em ~290 ms desde o mouse chegar, numa animação contínua, sem nenhum salto.
+
+## O bug que só apareceu no meu PC
+
+A v0.3 deixa trocar os atalhos. O padrão que eu tinha escolhido pra abrir o painel era `Ctrl+Alt+Space`, e testando no app de verdade ele não funcionava. Pior: **o outro atalho também parou**.
+
+Fechei o focusbrew e tentei registrar `Ctrl+Alt+Space` por fora: continuava ocupado. **Outro programa da minha máquina já usava essa combinação.** E como o app registrava os dois atalhos juntos, no esquema "tudo ou nada", a falha de um derrubava o outro.
+
+Agora cada atalho é registrado sozinho, as configurações avisam qual está ocupado, e o padrão do painel virou `Ctrl+Shift+Alt+Space`, que é o mesmo gesto do atalho de pausar mais o Alt.
+
+<Figure src="/devlog/focusbrew-v0-3-tracker-do-dia/configuracoes-geral.png" alt="Configurações com monitor do widget, iniciar com o Windows e os dois atalhos" caption="Atalhos, monitor do widget e iniciar com o Windows." narrow />
+
+## Uma dependência que eu não coloquei
+
+Pra opção "iniciar com o Windows", o caminho óbvio era o plugin oficial de autostart do Tauri. Quando adicionei, ele puxou junto uma atualização do próprio Tauri (2.11.5 → 2.12.1) e do motor do WebView, no meio da entrega. Desfiz e escrevi direto na chave `Run` do usuário no registro, usando a mesma biblioteca do Windows que o app já usava pra posicionar a janela. Ficou um arquivo de umas 70 linhas, sem nenhuma dependência nova.
+
+## Como testei
+
+- **135 testes em Rust** (dias, histórico de blocos, projetos, eventos do GitHub, alertas, atalhos, configurações) e **80 no front** (as contas da grade, do resumo e dos dias).
+- **Testes de ponta a ponta no app de verdade:** um script com Playwright se conecta no WebView2 do app rodando e clica, digita, arrasta tarefa pra grade, aperta atalho de verdade no Windows e confere a chave do registro.
+- No fim, uma revisão do código inteiro achou coisas que os testes não pegavam. A principal: virando a meia-noite, o painel continuava chamando ontem de "Hoje" até alguma outra coisa mudar.
+
+## O que ainda falta
+
+- Se o Windows não deixar a janela pegar o foco ao abrir pelo atalho, o painel fixado só solta clicando no cabeçalho.
+- Não testei com dois monitores de escalas diferentes (100% e 150%).
+- Tempo por *ferramenta* (VS Code, Claude Code…) ficou de fora: exigiria voltar a varrer processos, justamente a parte que eu tirei.
+
+## O que eu levo disso
+
+- **Meça antes de corrigir.** "Está travando" virou "um quadro 75 px fora do lugar" e "95 ms de repintura", e cada número apontou pra uma correção diferente.
+- **Às vezes o conserto é não fazer a operação cara.** Não dava pra deixar o redimensionamento do WebView mais rápido, mas dava pra nunca redimensionar.
+- **Teste no ambiente real.** O atalho ocupado não ia aparecer em nenhum teste automático, só no meu PC.
+
+O instalador assinado está na [release v0.3.0](https://github.com/sthevan027/focusbrew/releases/tag/v0.3.0), e o código em [github.com/sthevan027/focusbrew](https://github.com/sthevan027/focusbrew).

@@ -41,7 +41,7 @@ export const projetos: ProjectConfig[] = [
     title: "focusbrew",
     category: "ferramentas",
     description:
-      "App de bandeja que percebe quando você está programando com IA, liga o modo foco (bloqueia distrações e ativa o Não Perturbe) e reúne tarefas, PRs do GitHub e um timer com pausa-café.",
+      "Tracker do dia pra quem programa, num widget colado no topo da tela: tarefas por dia com timer, resumo do que você fez, PRs do GitHub virando tarefa e tempo por projeto. Tauri + Rust + React.",
     devlog: "focusbrew"
   },
   {
