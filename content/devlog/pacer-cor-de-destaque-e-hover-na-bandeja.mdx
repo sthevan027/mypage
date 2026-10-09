@@ -1,0 +1,56 @@
+---
+title: "Pacer 2.1.0: o hover da bandeja virou popup, e a cor é sua escolha"
+date: "2026-10-09"
+excerpt: "O tooltip de texto da bandeja virou um popup visual com as barras de uso, e uma nova cor de destaque customizável se espalha pelo painel, pelo popup e pelo ícone — sem nunca esconder o laranja/vermelho de aviso."
+project: "Pacer"
+cover: "/devlog/pacer-cor-de-destaque-e-hover-na-bandeja/capa.png"
+draft: false
+---
+
+Desde que [recriei o Pacer em Tauri](/devlog/pacer-claude-glass-recriado-em-tauri), o ícone da bandeja só mostrava um tooltip de texto no hover: `Pacer · 81%`. Funcionava, mas não contava a história toda — sessão e semana são dois números diferentes, e um texto só não dá pra mostrar os dois com a mesma clareza de uma barra.
+
+A v2.1.0 resolve isso e mais uma coisa que faltava desde sempre: **uma cor só, fixa, pra todo mundo**. Agora dá pra escolher.
+
+<Figure src="/devlog/pacer-cor-de-destaque-e-hover-na-bandeja/painel.png" alt="Painel do Pacer com a cor de destaque roxa: sessão em laranja (72% usado) e semanal em roxo (61% usado)" caption="Roxo no lugar do azul padrão — mas o aviso laranja continua aviso." narrow />
+
+Código aberto, como sempre: [github.com/sthevan027/pacer](https://github.com/sthevan027/pacer).
+
+## O popup no hover
+
+A ideia nasceu olhando pra um projeto de referência (o Niko, de outro autor) que tinha uma "ilha" no topo da tela com um popup rico no hover. Gostei do conceito, mas não dava pra copiar — é código fechado. Então reimplementei do zero, só a ideia.
+
+<Figure src="/devlog/pacer-cor-de-destaque-e-hover-na-bandeja/hover.png" alt="Popup ao passar o mouse na bandeja, com as barras de Sessão e Semanal e o ícone roxo" caption="Sessão e Semanal, visual, sem precisar abrir o painel inteiro." narrow />
+
+Por trás, é uma segunda janela nativa do Tauri, criada **só na primeira vez que o mouse passa no ícone** (não no início do app — um WebView2 a mais parado na memória, sem motivo, ia contra a própria disciplina de RAM que o Pacer já tinha). Ela se posiciona perto do ícone com uma função pura e testada: centraliza acima, cai pra baixo se não couber (barra de tarefas no topo), nunca sai da tela.
+
+### O bug que só apareceu depois da revisão
+
+Pedi uma revisão de um subagente de código focada em segurança e qualidade. Ela achou dois problemas de verdade:
+
+1. **O popup não deixava o clique passar.** Enquanto ele estava aberto, um clique em cima dele — inclusive em cima de **outro ícone vizinho da bandeja** — ficava preso ali, em vez de chegar no que estava embaixo.
+2. **A janela nascia junto com o app**, não só quando precisava.
+
+O segundo eu já tinha corrigido (criação sob demanda). Pro primeiro, adicionei `set_ignore_cursor_events(true)` — e aí o popup começou a **quebrar visualmente** toda vez que o painel principal roubava o foco. A causa: o efeito acrílico nativo do Windows (`window_vibrancy`) não convive bem com uma janela "clique-através" quando outra janela da mesma app ganha foco. Isolei testando as duas mudanças separadas antes de juntar, confirmei que era essa combinação, e tirei o acrílico só dessa janela — o fundo translúcido do CSS já dava conta sozinho.
+
+## A cor de destaque
+
+A escala de uso sempre foi fixa: azul até 70%, laranja de 70 a 90%, vermelho dali pra cima — a mesma ideia de severidade do [post anterior](/devlog/pacer-claude-glass-recriado-em-tauri#o-bug-da-barra-vermelha-com-22-de-uso). Funcionava bem, mas era **a única cor que existia**, em todo canto: painel, ícone, abas, toggles.
+
+<Figure src="/devlog/pacer-cor-de-destaque-e-hover-na-bandeja/aparencia.png" alt="Seção Aparência nas Configurações, com 5 presets de cor e o roxo selecionado" caption="Cinco presets. Sem hex livre — evita escolher algo ilegível no fundo escuro." narrow />
+
+Antes de escrever uma linha, parei pra decidir o escopo de verdade, pergunta por pergunta:
+
+- **Onde vale.** App inteiro — painel, popup de hover, ícone da bandeja — não só um lugar. Metade customizável e metade não ia parecer bug.
+- **O que muda e o que não muda.** A cor substitui só o estado "ok" (abaixo de 70%). Aviso e crítico continuam laranja e vermelho, sempre — era exatamente o sinal que eu tinha separado da previsão de ritmo no post anterior, e não fazia sentido deixar o tema apagar ele de novo.
+- **Presets, não hex livre.** Cinco cores (azul, roxo, verde, rosa, ciano), pensadas pra não colidir visualmente com o laranja/vermelho do aviso.
+- **Unificar com o resto da UI.** O app já tinha uma variável `--accent` separada, coincidentemente do mesmo azul, colorindo aba ativa, toggle, seletor — sem nenhuma ligação com a cor de severidade. Virou uma fonte só.
+
+Do lado técnico, o truque que evitou reescrever todo componente: o estado "ok" da barra passou a retornar `var(--accent)` em vez de um hex calculado. Só a raiz de cada janela seta essa variável CSS a partir da configuração — zero prop drilling pelos componentes.
+
+## O que eu levo disso
+
+- **Pedir revisão de segurança numa feature pequena ainda vale a pena.** O bug do clique-através (um popup sempre-no-topo engolindo cliques de ícones vizinhos) eu não teria achado sozinho — não é o tipo de coisa que aparece testando no fluxo normal.
+- **Isolar antes de combinar.** Quando duas mudanças juntas quebram algo, testar cada uma sozinha antes de desconfiar da combinação economizou várias rodadas de "tenta de novo".
+- **Decidir o escopo antes de codar evita rework.** As perguntas sobre onde a cor vale e o que ela substitui pareceram devagar na hora, mas pouparam ter que desfazer a metade errada depois.
+
+Instalador assinado na [release v2.1.0](https://github.com/sthevan027/pacer/releases/tag/v2.1.0), código em [github.com/sthevan027/pacer](https://github.com/sthevan027/pacer).
