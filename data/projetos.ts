@@ -41,7 +41,7 @@ export const projetos: ProjectConfig[] = [
     title: "focusbrew",
     category: "ferramentas",
     description:
-      "Tracker do dia pra quem programa, num widget colado no topo da tela: tarefas por dia com timer, resumo do que você fez, PRs do GitHub virando tarefa e tempo por projeto. Tauri + Rust + React.",
+      "Tracker do dia pra quem programa, num widget colado no topo ou na lateral da tela: tarefas por dia com timer, resumo do que você fez, PRs do GitHub virando tarefa e notas rápidas pra escrever e rabiscar. Tauri + Rust + React.",
     devlog: "focusbrew"
   },
   {
