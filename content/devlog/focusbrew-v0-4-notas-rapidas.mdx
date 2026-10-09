@@ -1,0 +1,108 @@
+---
+title: "focusbrew v0.4: notas rápidas e o widget nas laterais"
+date: "2026-10-09"
+excerpt: "Agora um atalho abre uma nota pra escrever e rabiscar uma ideia, e o widget pode morar na lateral da tela. E os bugs que só apareceram com alguém usando o app de verdade: dois editores salvando a mesma nota e um painel que não fechava mais."
+project: "focusbrew"
+cover: "/devlog/focusbrew-v0-4-notas-rapidas/capa.png"
+draft: true
+---
+
+Três dias depois da [v0.3](/devlog/focusbrew-v0-3-tracker-do-dia), o focusbrew ganhou a coisa que eu mais sentia falta enquanto trabalhava: um lugar rápido pra **anotar e rabiscar uma ideia** sem sair do que estou fazendo. E o widget, que só morava no topo da tela, agora pode ficar numa lateral.
+
+A v0.4.0 saiu em 09/10. O código é aberto (licença MIT): [github.com/sthevan027/focusbrew](https://github.com/sthevan027/focusbrew).
+
+<Callout>
+Os prints deste post usam **dados de demonstração** (tarefas e notas de exemplo), as mesmas imagens do README.
+</Callout>
+
+## Notas rápidas
+
+A ideia é simples: estou no meio de uma tarefa, aparece uma ideia ou eu quero explicar algo desenhando. Aperto `Ctrl+Alt+N` de qualquer app e uma nota abre pendurada no topo da tela, por cima do painel:
+
+<Figure src="/devlog/focusbrew-v0-4-notas-rapidas/nota-painel.png" alt="Nota aberta com três linhas de texto, um retângulo azul, uma seta amarela, uma elipse verde preenchida e um rabisco rosa" caption="Texto em cima, desenho por cima do texto. A primeira linha vira o título da nota." />
+
+- **Aa** pra escrever e **✎** pra desenhar: caneta, quadrado, círculo, triângulo, linha e seta. Com `Shift` as formas ficam proporcionais e a linha trava em 45°. Tem preenchimento, 6 cores, 3 espessuras, borracha e seleção pra mover, redimensionar e apagar.
+- Desfazer e refazer com `Ctrl+Z` / `Ctrl+Shift+Z`.
+- Dá pra **colar um print** com `Ctrl+V`, e um botão copia a nota inteira como imagem, pronta pra colar no chat.
+- **Não tem botão de salvar.** A nota salva sozinha um instante depois de cada mudança, e nota vazia nem é guardada. `Esc` fecha.
+
+Com uma nota já aberta, o atalho não cria outra: só traz a nota pra frente e pisca a borda. O histórico fica no ☰ da própria nota, com miniatura de cada uma e um filtro por texto:
+
+<Figure src="/devlog/focusbrew-v0-4-notas-rapidas/nota-historico.png" alt="Gaveta do histórico aberta sobre a nota, com duas notas e suas miniaturas" caption="O histórico desliza por cima da folha. Clicar abre a nota na hora." />
+
+Quem prefere uma janela normal escolhe "Em janela": a nota abre no meio do monitor. Um botão na própria nota troca entre os dois jeitos sem perder nada. E na configuração, no lugar da aba Projetos (que saiu; o `#projeto` continua no resumo do dia), entrou a aba **Notas** com a galeria:
+
+<Figure src="/devlog/focusbrew-v0-4-notas-rapidas/configuracoes-notas.png" alt="Aba Notas da configuração com a opção de onde a nota abre e a galeria com duas notas" caption="Onde a nota abre e todas as notas numa galeria." />
+
+## O widget nas laterais
+
+Em **Configurações → Notch → Posição** dá pra escolher Topo, Esquerda ou Direita. Na lateral, com uma tarefa rodando, o widget vira uma barrinha em pé só com a contagem (minutos em cima, segundos embaixo, ou numa linha só), e o painel sai da borda pra dentro da tela:
+
+<Figure src="/devlog/focusbrew-v0-4-notas-rapidas/widget-lateral-painel.png" alt="Painel do focusbrew saindo da borda esquerda da tela" caption="O mesmo painel, agora saindo da esquerda." />
+
+De carona vieram outras coisas pequenas: clicar no número de minutos de uma tarefa pra **digitar o tempo** (no lugar das setinhas), o estilo **Minimal** só com a contagem no meio, o painel fixado podendo **fechar sozinho** depois de 15, 30 ou 60 segundos parado, e um ícone novo: um grão de café.
+
+## Os bugs que valeram o post
+
+### Dois editores salvando a mesma nota
+
+A nota pode aparecer em dois lugares: dentro da janela do widget (sobre o painel) ou numa janela própria. O backend em Rust manda um evento `open-note` pra **uma** janela só, com `emit_to("note", ...)`. Só que no lado do JavaScript eu escutava com o `listen()` comum, e esse escuta o evento **venha de onde vier**. Resultado: no modo janela, a nota abria na janela **e** sobre o painel ao mesmo tempo, e os dois editores salvavam versões diferentes da mesma nota.
+
+A correção foi uma linha em cada evento: escutar só na janela atual.
+
+```ts
+// antes: ouvia o evento de qualquer janela
+listen("open-note", ...)
+// depois: só o que foi mandado pra esta janela
+getCurrentWebviewWindow().listen("open-note", ...)
+```
+
+### Criar uma janela pode travar o app
+
+A documentação do Tauri avisa: no Windows, criar uma janela de dentro de um comando **síncrono** ou de um tratador de evento trava tudo. O atalho global é justamente um tratador de evento. O comando de abrir nota virou `async` e o atalho cria a janela numa thread separada.
+
+### Nunca perder as notas
+
+As notas ficam num `notes.json`. Algumas regras que eu quis garantir com teste:
+
+- A gravação é **atômica**: escrevo num arquivo temporário e renomeio por cima. Se o app cair no meio, o arquivo antigo continua inteiro.
+- Se o arquivo estiver **quebrado**, ele é renomeado pra `notes.corrupt-<hora>.json` e o app começa vazio, em vez de sobrescrever.
+- Se o arquivo **existir mas não der pra ler** (travado por um antivírus, por exemplo), o app se recusa a gravar. Tratar isso como "não tem nota nenhuma" faria a próxima nota apagar todas as outras.
+- As imagens ficam em arquivos separados, com o nome tirado do próprio conteúdo. E as que nenhuma nota usa mais só são apagadas quando o arquivo foi lido sem problema.
+
+### O painel que não fechava mais
+
+Esse só apareceu usando o app de verdade. Eu abria uma nota sobre o painel, mudava ela pra janela e tirava o mouse de cima: **o painel ficava aberto pra sempre**.
+
+A causa: o painel abre e fecha pelos eventos `mouseenter` e `mouseleave` da página. Quando a nota vira janela, essa janela nova pega o foco e o `mouseleave` simplesmente **não chega**. A página continua achando que o mouse está em cima do painel.
+
+O app já tinha, no Rust, um loop que confere a posição do cursor a cada 30 ms (é ele que decide quando a janela deixa o clique passar). Então agora o backend também **avisa a página** quando o cursor passou meio segundo fora do painel aberto:
+
+```rust
+// a cada 30 ms, no loop que já existia
+if fora.tick(agora, painel_aberto, cursor_fora, MEIO_SEGUNDO) {
+    app.emit_to("widget", "widget-cursor-outside", ())?;
+}
+```
+
+A primeira versão dessa correção ainda tinha um furo: o painel fechava, mas a página continuava achando que o mouse estava "dentro". Quando a lista de tarefas montava de novo, isso **reabria o painel**, num laço de abre e fecha a cada segundo. Faltava zerar esse "dentro" junto com o aviso.
+
+## Como testei
+
+- **176 testes em Rust** e **166 no front**, escritos antes do código: o arquivo de notas (atômico, corrompido, ilegível), os limites, a geometria das formas e da seleção, o desfazer, os atalhos.
+- Depois de tudo pronto, uma **revisão do código inteiro com olhos novos** achou 8 problemas que os testes não pegavam, entre eles os dois editores, a janela travando e o arquivo ilegível.
+- Por fim, **rodadas de teste usando o app instalado**, com mouse, teclado e prints: abrir pelo atalho, escrever, desenhar cada forma, colar imagem, trocar entre painel e janela, apagar a nota aberta, as três bordas. Foi aí que o painel preso e o laço apareceram, e cada correção foi testada de novo do mesmo jeito.
+
+## O que ainda falta
+
+- Arrastar um arquivo de imagem pra dentro da nota: a imagem sempre cai no centro, não onde foi solta. E esse caminho ainda não foi testado direito.
+- `Esc` no filtro do histórico fecha a nota inteira, e não só a gaveta.
+- Trocar a nota de lugar volta pro modo texto, mesmo se você estava desenhando.
+
+## O que eu levo disso
+
+- **Evento "mandado pra uma janela" não quer dizer "ouvido só por ela".** Vale conferir dos dois lados.
+- **Não confie só no evento da página quando o sistema sabe a verdade.** O Rust já sabia onde estava o cursor; foi só usar isso.
+- **"Não consegui ler" não é "está vazio".** É a diferença entre um app que perde suas notas e um que não perde.
+
+O instalador assinado está na [release v0.4.0](https://github.com/sthevan027/focusbrew/releases/tag/v0.4.0), e o código em [github.com/sthevan027/focusbrew](https://github.com/sthevan027/focusbrew).
