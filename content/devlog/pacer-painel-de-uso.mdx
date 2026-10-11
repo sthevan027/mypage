@@ -1,0 +1,49 @@
+---
+title: "Pacer: o painel de uso, lendo os logs que o Claude Code já deixa no disco"
+date: "2026-10-11"
+excerpt: "O widget mostra quanto do plano sobrou. O painel novo mostra pra onde foi: tokens por modelo, sessão e projeto, com o valor estimado a preço de API. Os dados já estavam no disco; faltava parar de jogá-los fora."
+project: "Pacer"
+cover: "/devlog/pacer-painel-de-uso/capa.png"
+draft: true
+---
+
+O widget do Pacer responde uma pergunta: quanto do plano eu já usei e quanto falta pro reset. Faltava responder a seguinte: **pra onde foi esse consumo?** Quais modelos, quais sessões, quais projetos.
+
+O painel de uso é essa resposta. É uma janela à parte, aberta pelo menu da bandeja ou por um botão no cabeçalho do widget. Ela mostra o consumo por dia e por modelo, a divisão entre entrada, saída e cache, os rankings de sessões e projetos e a tabela de registros recentes.
+
+Está na `main` do repositório, mas ainda não saiu numa release (a última é a 2.1.0). Código aberto: [github.com/sthevan027/pacer](https://github.com/sthevan027/pacer).
+
+## Os dados já estavam no disco
+
+Cada resposta do assistente, nos logs do Claude Code em `~/.claude/projects`, traz horário, sessão, pasta, modelo e um bloco `usage` com entrada, saída e cache. O parser antigo lia tudo isso e somava num número só por dia. O painel precisou de um parser que guarda cada requisição com seus campos.
+
+Usei como referência visual a página "Uso" do console da Anthropic. Só a referência: nada de código ou assets de terceiros.
+
+A estrutura nova ficou em três partes: um módulo `usage/` com o evento, o armazenamento e o relatório; a janela `panel`; e os comandos `get_usage_report` e `export_usage_csv`. O modelo de dados não depende do Claude. Quando outro provedor entrar, ele só precisa produzir o mesmo tipo de evento.
+
+Um detalhe de implementação: no Windows, criar uma janela de dentro de um handler síncrono pode travar a thread principal. Por isso a janela nasce fora dela, e os comandos são `async` com `spawn_blocking`, porque são chamados de dentro do WebView.
+
+## Decisões que mudaram em relação ao plano
+
+Escrevi a especificação antes de codar e depois revisei as decisões. Algumas foram contra a sugestão original:
+
+- **Tudo na cor de destaque.** Em vez de cores fixas por modelo, os modelos se diferenciam pela mistura com branco, de 100% a 45% da cor. Todos continuam sendo a cor escolhida, e as pilhas do gráfico ainda se distinguem.
+- **Recharts, não SVG feito à mão.** A spec sugeria SVG, mas a biblioteca pesa uns 367 kB. Carreguei o painel com `import()` dinâmico, então esse peso só entra na janela do painel. O widget continua com os mesmos 243 kB.
+- **Valor em R$ como estimativa.** O painel mostra quanto aquele uso custaria a preço de API. Quem usa assinatura não paga isso, então o número é rotulado como estimativa. O câmbio é fixo e configurável (padrão 4,97). A tabela de preços é uma constante em `pricing.rs`, com fonte e data no comentário, e o casamento é pelo prefixo mais longo. Assim `claude-opus-5-5` não cai no preço de `claude-opus-5`.
+
+## O que os logs reais ensinaram
+
+- **Teste contra dados reais, com uma segunda implementação.** Na amostra dos últimos 30 dias havia 7.939 eventos. Os totais bateram exatamente com uma implementação independente, escrita só pra conferir. Testes unitários não pegam erro de janela de datas, nem de fuso, nem de deduplicação. Esse método valeu mais que qualquer teste isolado.
+- **A escrita de cache de 1 hora domina o custo.** Na amostra, eram 45,4 milhões de tokens de escrita de 1 hora contra 3,8 milhões da de 5 minutos. A de 1 hora é 12 vezes maior e 1,6 vez mais cara por token. Somar as duas numa taxa só subestimaria o valor de forma relevante. O log já traz a divisão, então usar a divisão saiu de graça.
+- **Deduplicar por sessão, horário e modelo estava errado.** Foi o primeiro rascunho, e o teste pegou: duas requisições diferentes no mesmo segundo e no mesmo modelo viravam uma só. A identidade certa é `message.id` mais `requestId`.
+- **A janela abria rolada até o fim.** Enquanto o relatório não chega, o conteúdo é curto; quando o gráfico cresce, o contêiner fica no fim. Corrigi com um scroll pro topo só na primeira carga, porque o painel atualiza sozinho a cada 10 segundos e não pode roubar o scroll de quem está lendo.
+
+## O que ficou de fora
+
+Os marcos de limite, que usam o campo `quotaLimits` quando ele aparece no log, não entraram. As abas Visão geral e Registros entraram.
+
+## O que eu levo disso
+
+- **Dado que já existe no disco vale mais que buscar de novo.** A primeira versão jogava fora quase tudo que o log trazia.
+- **Compare com uma segunda implementação, não só com testes unitários.** Erros de recorte e de agregação só aparecem contra dados reais.
+- **Um número de custo sem fonte e data vira promessa errada.** Por isso a tabela de preços guarda as duas coisas no próprio arquivo.

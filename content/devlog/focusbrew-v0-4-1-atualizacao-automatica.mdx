@@ -1,0 +1,43 @@
+---
+title: "focusbrew v0.4.1: o app agora se atualiza sozinho"
+date: "2026-10-11"
+excerpt: "A v0.4.1 traz um updater assinado: o app checa ao abrir, mostra a versão nova nas configurações e instala com um clique. O código foi a parte rápida; o processo de release deu mais trabalho."
+project: "focusbrew"
+cover: "/devlog/focusbrew-v0-4-1-atualizacao-automatica/capa.png"
+draft: true
+---
+
+Até a v0.4.0, atualizar o focusbrew era baixar o instalador de novo na página de releases e rodar por cima. Funciona, mas quase ninguém faz isso. Quem instalou uma vez fica na versão em que instalou.
+
+A v0.4.1 muda isso. Ao abrir, o app checa se existe versão nova. Se existir, a aba **Configurações → Geral → Atualizações** mostra a versão disponível e um botão **Atualizar agora**, que baixa, instala e reinicia o app.
+
+O código é aberto (MIT): [github.com/sthevan027/focusbrew](https://github.com/sthevan027/focusbrew).
+
+## Como funciona
+
+Usei o `tauri-plugin-updater` oficial (Tauri v2), com o `tauri-plugin-process` pra reiniciar depois de instalar. Três decisões que importam:
+
+- **Assinatura separada.** O instalador já é assinado com o certificado de code signing do Windows. O updater usa outro par de chaves, minisign, gerado uma vez. A chave pública fica versionada no `tauri.conf.json`. A privada fica fora do repositório, numa variável de ambiente, e só é usada na hora do build. Antes de instalar, cada atualização é conferida contra a pública, então um `latest.json` adulterado não passa.
+- **Endpoint fixo.** O app aponta pra `releases/latest/download/latest.json`. Como a URL é sempre a da última release, ela nunca muda de versão pra versão.
+- **Estado só em memória.** Última checagem, versão disponível, "checando", "instalando" e erro vivem no React. Não gravo nada em disco, porque a checagem roda de novo a cada abertura. Por isso nem precisou de comando novo no Rust.
+
+O status é um reducer puro (`updateStatus.ts`), testado sem a interface. A checagem automática é silenciosa: se a rede falhar, o app não mostra nada e tenta de novo na próxima abertura. Erros de verdade, na hora de verificar ou de instalar, viram uma frase curta embaixo do botão. O erro cru vai só pro console.
+
+## O que deu mais trabalho: o release
+
+O código levou pouco. O resto foi o processo de release, e foi ali que apareceram os problemas:
+
+1. **A tag tem que ser `v<versão>`.** É ela que o `latest.json` referencia, então um nome diferente quebra a atualização. Virou um commit de correção próprio.
+2. **O script que gera o `latest.json` estava em `scripts/`, que é ignorado pelo git.** Movi pra `tools/`.
+3. **`.env` não serve pra variável de assinatura.** A chave precisa ser exportada no terminal antes do build. Isso ficou documentado no README, com o passo a passo.
+4. **Perder a chave privada é perder as atualizações.** As versões instaladas só aceitam updates assinados pela chave que elas conhecem. Sem ela, quem já instalou fica preso e só reinstala na mão. O README manda guardar um backup da chave e da senha.
+
+Também troquei o `package-lock.json` pelo `bun.lock`, já que o projeto usa Bun.
+
+## O que eu levo disso
+
+- **Atualização automática é fácil de ligar e difícil de operar.** O código que o app roda é a menor parte. O que dá trabalho é o processo de release e onde a chave fica guardada.
+- **A chave privada é a coisa mais importante do projeto.** Ela precisa de backup antes de qualquer outra coisa.
+- **Estado que se recalcula a cada abertura não precisa de persistência.** Guardar em disco só criaria um valor velho pra cuidar.
+
+O instalador da v0.4.1 está na [página de releases](https://github.com/sthevan027/focusbrew/releases).
