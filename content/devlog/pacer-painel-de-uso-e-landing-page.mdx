@@ -1,0 +1,68 @@
+---
+title: "Pacer: o painel de uso e a landing page"
+date: "2026-10-12"
+excerpt: "O widget mostra quanto do plano sobrou. O painel novo mostra pra onde foi: tokens por modelo, sessão e projeto, com valor estimado a preço de API. E o Pacer ganhou uma página própria, com vídeo de apresentação. Os dados do painel já estavam no disco; faltava parar de jogá-los fora."
+project: "Pacer"
+cover: "/devlog/pacer-painel-de-uso-e-landing-page/capa.png"
+draft: true
+---
+
+A [2.1.0](/devlog/pacer-cor-de-destaque-e-hover-na-bandeja) fechou o popup da bandeja e a cor de destaque. Depois dela entraram duas coisas grandes: um **painel de uso** em janela própria e uma **landing page** pro projeto, que já está no ar em [pacercontrol.netlify.app](https://pacercontrol.netlify.app/).
+
+O widget continua sendo o produto: Sessão, Semanal e a grade de 30 dias, sempre leve. O painel é o lugar pra quem quer olhar o consumo com calma. Ele está na `main` do repositório, mas ainda não saiu numa release (a última é a 2.1.0). Código aberto: [github.com/sthevan027/pacer](https://github.com/sthevan027/pacer).
+
+<Figure src="/devlog/pacer-painel-de-uso-e-landing-page/painel.png" alt="Janela Uso do Pacer com o gráfico de entrada e saída por dia, empilhado por Opus, Sonnet e Haiku, e a tabela de consumo por modelo" caption="O painel: gráfico por dia e tier, e a tabela por modelo com entrada, saída e cache separados. Passando o mouse numa barra, o detalhe do dia por tier." />
+
+## O painel de uso
+
+O widget do Pacer responde uma pergunta: quanto do plano eu já usei e quanto falta pro reset. Faltava responder a seguinte: **pra onde foi esse consumo?** Quais modelos, quais sessões, quais projetos.
+
+O painel abre pelo menu da bandeja ou por um botão no cabeçalho do widget. É uma janela à parte, criada só quando alguém pede, que fecha de verdade (destrói o WebView em vez de esconder). Mostra o consumo por dia e por modelo, a divisão entre entrada, saída e cache, os rankings de sessões e projetos e a tabela de registros recentes, com exportação em CSV.
+
+### Os dados já estavam no disco
+
+Cada resposta do assistente, nos logs do Claude Code em `~/.claude/projects`, traz horário, sessão, pasta, modelo e um bloco `usage` com entrada, saída e cache. No dia em que planejei isso eram 16 pastas de projeto, 155 arquivos `.jsonl`, uns 506 MB e 80 sessões. O parser antigo lia tudo e somava num número só por dia. O painel precisou de um parser que guarda cada requisição com seus campos.
+
+Usei como referência visual a página "Uso" do console da Anthropic. Só a referência: nada de código ou assets de terceiros.
+
+A estrutura nova ficou em três partes: um módulo `usage/` com o evento, o armazenamento e o relatório; a janela `panel`; e os comandos `get_usage_report` e `export_usage_csv`. O modelo de dados não depende do Claude. Quando outro provedor entrar, ele só precisa produzir o mesmo tipo de evento.
+
+Um detalhe de implementação: no Windows, criar uma janela de dentro de um handler síncrono pode travar a thread principal. Por isso a janela nasce fora dela, e os comandos são `async` com `spawn_blocking`, porque são chamados de dentro do WebView.
+
+### Decisões que mudaram em relação ao plano
+
+Escrevi a especificação antes de codar e depois revisei as decisões. Algumas foram contra a sugestão original:
+
+- **Tudo na cor de destaque.** Em vez de cores fixas por modelo, os modelos se diferenciam pela mistura com branco, de 100% a 45% da cor. Todos continuam sendo a cor escolhida, e as pilhas do gráfico ainda se distinguem.
+- **Recharts, não SVG feito à mão.** A spec sugeria SVG, mas a biblioteca pesa uns 367 kB. Carreguei o painel com `import()` dinâmico, então esse peso só entra na janela do painel. O widget continua com os mesmos 243 kB.
+- **Valor em R$ como estimativa.** O painel mostra quanto aquele uso custaria a preço de API. Quem usa assinatura não paga isso, então o número é rotulado como estimativa. O câmbio é fixo e configurável (padrão 4,97). A tabela de preços é uma constante em `pricing.rs`, com fonte e data no comentário, e o casamento é pelo prefixo mais longo. Assim `claude-opus-5-5` não cai no preço de `claude-opus-5`, e um id com data, como `claude-haiku-4-5-20251001`, cai em `claude-haiku-4-5`.
+
+### O que os logs reais ensinaram
+
+- **Teste contra dados reais, com uma segunda implementação.** Na amostra dos últimos 30 dias havia 7.939 eventos. Os totais bateram exatamente com uma implementação independente, escrita só pra conferir. Testes unitários não pegam erro de janela de datas, nem de fuso, nem de deduplicação. Esse método valeu mais que qualquer teste isolado.
+- **A escrita de cache de 1 hora domina o custo.** Na amostra, eram 45,4 milhões de tokens de escrita de 1 hora contra 3,8 milhões da de 5 minutos. A de 1 hora é 12 vezes maior e 1,6 vez mais cara por token. Somar as duas numa taxa só subestimaria o valor de forma relevante. O log já traz a divisão, então usar a divisão saiu de graça.
+- **Deduplicar por sessão, horário e modelo estava errado.** Foi o primeiro rascunho, e o teste pegou: duas requisições diferentes no mesmo segundo e no mesmo modelo viravam uma só. A identidade certa é `message.id` mais `requestId`.
+- **A janela abria rolada até o fim.** Enquanto o relatório não chega, o conteúdo é curto; quando o gráfico cresce, o contêiner fica no fim. Corrigi com um scroll pro topo só na primeira carga, porque o painel atualiza sozinho a cada 10 segundos e não pode roubar o scroll de quem está lendo.
+
+### O que ficou de fora
+
+Os marcos de limite, que usam o campo `quotaLimits` quando ele aparece no log, não entraram. As abas Visão geral e Registros entraram.
+
+## A landing page
+
+O Pacer ganhou uma página própria: [pacercontrol.netlify.app](https://pacercontrol.netlify.app/). É um site em Vite + React, na pasta `site/` do mesmo repositório, publicado no Netlify.
+
+<Figure src="/devlog/pacer-painel-de-uso-e-landing-page/landing.png" alt="Topo da landing page do Pacer: título 'Veja o fim do seu limite chegando, antes dele chegar', botão Baixar agora com a versão 2.1.0 e o vídeo de apresentação" caption="O topo da página: a promessa, o botão de download e o vídeo de 21 segundos." />
+
+Além do vídeo, ela tem uma seção de novidades que lê as releases do GitHub, uma de privacidade e o botão de download, que baixa o instalador direto, sem passar pela página de releases.
+
+O vídeo do hero foi a parte mais trabalhosa. Ele mostra o painel, a bandeja e o alerta, com narração e trilha. A montagem é um projeto em Remotion na pasta `hero-video/`, e a narração foi gerada com o ElevenLabs. Depois fiz uma versão vertical 9:16 pra TikTok e Reels, a partir dos mesmos quadros.
+
+## O que eu levo disso
+
+- **Dado que já existe no disco vale mais que buscar de novo.** A primeira versão jogava fora quase tudo que o log trazia.
+- **Compare com uma segunda implementação, não só com testes unitários.** Erros de recorte e de agregação só aparecem contra dados reais.
+- **Um número de custo sem fonte e data vira promessa errada.** Por isso a tabela de preços guarda as duas coisas no próprio arquivo.
+- **Quando um custo tem componentes com preço diferente, não some antes de olhar.** A divisão de cache que o log já trazia mudou o valor em R$ de forma relevante.
+
+O painel ainda não tem release; a próxima versão vai trazer ele. Enquanto isso, o código está em [github.com/sthevan027/pacer](https://github.com/sthevan027/pacer) e a página em [pacercontrol.netlify.app](https://pacercontrol.netlify.app/).
