@@ -1,0 +1,58 @@
+---
+title: "Pacer: painel de uso com gráfico por modelo, e a landing page"
+date: "2026-10-10"
+excerpt: "Depois da 2.1.0 o Pacer ganhou uma tela só pra consumo: gráfico por dia e modelo, ranking de sessões e projetos, valor em R$. E uma landing page com vídeo de apresentação narrado. O painel quase me enganou com um total que parecia certo."
+project: "Pacer"
+draft: true
+---
+
+A [2.1.0](/devlog/pacer-cor-de-destaque-e-hover-na-bandeja) fechou o popup da bandeja e a cor de destaque. Depois dela entraram duas coisas grandes, que ainda não saíram como release: um **painel de uso** em janela própria e uma **landing page** pro projeto.
+
+O widget continua sendo o produto. Ele mostra Sessão, Semanal e a grade de 30 dias, e continua leve. O painel é o lugar pra quem quer ver o consumo com calma: quanto foi por dia, por modelo, quais sessões e projetos mais gastaram.
+
+## O painel de uso
+
+Ele abre pelo item "Abrir painel de uso" no menu da bandeja e por um botão no cabeçalho do widget. É uma janela nova, criada só quando alguém pede, e fecha de verdade (destrói o WebView em vez de esconder), porque é uso esporádico. O `main` é o oposto: fica sempre vivo.
+
+Os dados vêm dos logs que o Claude Code já escreve em `~/.claude/projects`. No dia em que planejei isso eram 16 pastas de projeto, 155 arquivos `.jsonl`, uns 506 MB e 80 sessões. Cada resposta do assistente traz tokens de entrada, saída e cache, o modelo, a sessão e a pasta. O parser antigo somava tudo num número por dia e jogava o resto fora. Ou seja: **os dados do painel já estavam no disco**. O trabalho foi parar de descartá-los.
+
+O que tem hoje:
+
+- **Consumo por dia e por modelo**, com seletor de 7, 14 ou 30 dias e filtro por família (Opus, Sonnet, Haiku).
+- **Ranking de sessões e de projetos**, por tokens.
+- **Tabela de requisições recentes**, com entrada, saída e cache, e exportação em CSV.
+- **Valor em R$** como equivalente a preço de API. A cotação é um campo nas configurações (o padrão é 4,97, referência do BCB na data em que escrevi).
+
+A decisão que mais pesou foi a cor. Todo o painel usa a cor de destaque escolhida pelo usuário, sem paleta fixa por modelo. Só que aí as famílias de modelo ficavam todas iguais na pilha do gráfico. A saída foi variar a mistura com branco, de 100% a 45% da cor de destaque. Continua sendo uma cor só, mas cada família tem a sua.
+
+Outra decisão foi o gráfico. A spec sugeria SVG feito à mão, mas escolhi o Recharts. Ele pesa uns 367 kB, então o painel entra por `import()` dinâmico e sai num chunk que só a janela do painel carrega. O widget segue com os mesmos 243 kB.
+
+## O que os dados ensinaram
+
+Três coisas que eu não teria visto só com testes de unidade:
+
+**1. Conferir o total com uma segunda implementação.** Escrevi um segundo parser, independente, só pra comparar. Os totais bateram exatamente nos 7.939 eventos dos últimos 30 dias. Isso validou a janela, o fuso local, a deduplicação e a divisão do cache. Erro de recorte de janela passa batido em teste unitário; numa comparação de totais aparece na hora.
+
+**2. A escrita de cache de 1 hora domina.** Na amostra, eram 45,4 milhões de tokens de escrita de cache de 1 h contra 3,8 milhões da de 5 min. São 12 vezes mais volume e cerca de 1,6 vez mais caro por token. Se eu tivesse somado as duas numa taxa só, como a spec previa, o valor em R$ sairia subestimado de forma relevante. O log já traz a divisão, então usar ela saiu de graça.
+
+**3. Deduplicar pelo timestamp é errado.** Meu primeiro rascunho deduplicava por sessão, timestamp e modelo. O teste pegou: duas requisições diferentes no mesmo segundo e no mesmo modelo viravam uma só. A identidade certa é `message.id` mais `requestId`, que o código original já usava.
+
+E um bug bobo de UI: na primeira abertura, o painel aparecia rolado até o fim. Enquanto o relatório não chega, o conteúdo é curto; quando o gráfico cresce, o contêiner fica rolado lá embaixo. A correção foi rolar pro topo só na primeira carga, já que o painel atualiza sozinho a cada 10 segundos e não pode roubar o scroll de quem está lendo.
+
+## A tabela de preços
+
+O valor em R$ depende de uma tabela de preços que é um `const` em `pricing.rs`, com a fonte e a data no comentário do módulo. O casamento é pelo **prefixo mais longo**: `claude-opus-5-5` não pode cair no preço de `claude-opus-5`, e um id com data, como `claude-haiku-4-5-20251001`, tem que cair em `claude-haiku-4-5`. Preço desatualizado se corrige ali, e está documentado no próprio arquivo.
+
+## A landing page
+
+O site do Pacer nasceu em Vite + React, em pedaços (as fatias L1 a L3 da spec). Tem uma seção de changelog, que busca as releases do GitHub, e uma seção de privacidade.
+
+O vídeo do hero foi a parte mais trabalhosa. Ele mostra o painel, a bandeja e o alerta, com narração e trilha. A montagem é um projeto em Remotion, e a narração foi gerada com o ElevenLabs. Depois fiz uma versão vertical 9:16 pra TikTok e Reels, a partir dos mesmos quadros. O ícone do app também entrou no cabeçalho, no lugar do raio.
+
+## O que eu levo disso
+
+- **Totais batendo não prova que o parser está certo.** Uma segunda implementação, escrita só pra conferir, pegou mais do que qualquer teste.
+- **Quando um custo tem componentes com preço diferente, não some antes de olhar.** A divisão de cache que o log já trazia mudou o valor em R$ de forma relevante.
+- **Uma tela de consumo precisa de cuidado com a cor.** Se a identidade é uma cor só, a diferença entre séries vira mistura de tons, não troca de cor.
+
+O código está em [github.com/sthevan027/pacer](https://github.com/sthevan027/pacer). O painel e a landing ainda não têm release; a próxima versão vai trazer os dois.

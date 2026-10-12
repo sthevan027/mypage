@@ -1,0 +1,46 @@
+---
+title: "focusbrew 0.4.1: o app agora avisa e instala as atualizações"
+date: "2026-10-09"
+excerpt: "Até aqui, pra pegar uma versão nova do focusbrew a pessoa tinha que baixar o instalador de novo. Agora o app checa sozinho ao abrir e tem um botão pra atualizar. O caminho até lá passou por chaves de assinatura, um arquivo que o .gitignore engolia e uma tag de release com nome errado."
+project: "focusbrew"
+draft: true
+---
+
+A [v0.4](/devlog/focusbrew-v0-4-notas-rapidas) trouxe as notas. A 0.4.1 é menor em tamanho de mudança, mas é a que resolve um problema de quem usa: **atualizar o app**. Antes, a pessoa precisava saber que existia versão nova, baixar o instalador e rodar de novo. Agora o focusbrew checa ao abrir e mostra o status nas configurações.
+
+O código é aberto (MIT): [github.com/sthevan027/focusbrew](https://github.com/sthevan027/focusbrew).
+
+## Como funciona
+
+A atualização usa o plugin oficial `tauri-plugin-updater`, com `tauri-plugin-process` pra reiniciar o app depois de instalar. Três partes:
+
+- **Checagem silenciosa.** Ao abrir, o app consulta um endereço fixo: `releases/latest/download/latest.json`, no GitHub. Se der certo ou errado, a checagem registra a hora. Se falhar por falta de rede, não mostra nada pra pessoa: só tenta de novo na próxima abertura.
+- **Área "Atualizações" nas configurações**, na aba Geral. Mostra a versão atual e "Verificado às HH:MM". Se tem versão nova, o texto diz qual é e o botão vira **Atualizar agora**. Sem versão nova, o botão é **Verificar agora**.
+- **Baixar, instalar e reiniciar.** Durante o download o botão fica carregando e desabilitado. Erro nessa etapa aparece como texto curto embaixo do botão, sem modal e sem travar o app.
+
+O estado da atualização é um reducer puro, testado sem janela, e um hook liga esse reducer ao plugin de verdade. A separação ajudou: a lógica de "checagem recente" versus "nunca checado" e "versão nova" versus "já atualizado" pôde ser testada sem subir o app.
+
+## A chave de assinatura não é a do Windows
+
+O instalador já é assinado com o certificado de code signing do Windows. O updater usa outra coisa: um par de chaves minisign, separado, gerado uma vez com o próprio Tauri.
+
+- A **chave pública** vai no `tauri.conf.json`, versionada normalmente.
+- A **chave privada** nunca entra no repositório. Fica numa variável de ambiente local, só na hora de gerar a release.
+
+Se a chave privada vazar, qualquer um consegue publicar um instalador que o app aceita como atualização. Por isso ela mora fora do repo, e o README de desenvolvimento explica como usar.
+
+## O que deu errado no caminho
+
+**A tag precisava ser `v<versão>`.** O `latest.json` aponta pra release pelo nome da tag, e eu tinha criado a release com o nome errado. O erro só aparece quando alguém tenta atualizar, então é o tipo de coisa que passa despercebido até o primeiro usuário. A correção foi um commit só. A lição é de processo: o nome da tag é parte do contrato com o endpoint, não um detalhe da release.
+
+**O script do `latest.json` sumiu.** Eu tinha colocado o script de geração numa pasta `scripts/`, que o `.gitignore` do projeto ignora. Ele funcionava na minha máquina e não ia pro repositório. Movi pra `tools/`, que não é ignorada.
+
+**Erro cru do updater não serve pra ninguém.** O plugin devolve mensagens técnicas. Troquei por uma frase curta, sem jargão, dizendo o que aconteceu e que dá pra tentar de novo.
+
+## O que eu levo disso
+
+- **Atualização só se prova com duas versões.** Unitário cobre o parsing e o estado; a prova de verdade é instalar uma versão, publicar a seguinte e ver o app se atualizar.
+- **Arquivo ignorado pelo `.gitignore` é invisível pra quem clona.** Se um script faz parte do processo de release, ele precisa estar versionado.
+- **Separar a lógica do estado da janela deixa o teste simples.** O reducer roda sem UI, e o hook é a única parte que depende do plugin.
+
+A release com o instalador e o `latest.json` está em [releases/tag/v0.4.1](https://github.com/sthevan027/focusbrew/releases/tag/v0.4.1).
