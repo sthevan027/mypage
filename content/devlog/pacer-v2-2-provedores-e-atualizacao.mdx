@@ -1,0 +1,49 @@
+---
+title: "Pacer 2.2 beta: um widget pra vários provedores, e o app se atualiza sozinho"
+date: "2026-10-14"
+excerpt: "A 2.2.0-beta.2 junta o painel de uso com cinco provedores (Claude, OpenAI/Codex, Copilot, OpenRouter e z.ai) e a atualização automática. O cuidado principal foi que nenhum provedor novo mexe em nada enquanto estiver desligado."
+project: "Pacer"
+draft: true
+---
+
+A 2.1.0 mostrava o consumo do Claude. A 2.2 mostra o consumo de quem usa mais de uma ferramenta. Saiu como **2.2.0-beta.2**, pré-release, e junta três coisas que estavam em branches separadas: o painel de uso, a atualização automática e os provedores novos.
+
+O código é aberto: [github.com/sthevan027/pacer](https://github.com/sthevan027/pacer).
+
+## Os provedores
+
+O widget agora tem uma aba por provedor. Cada um tem cor, logo e alerta próprios, e o painel de uso ganhou um filtro por provedor e um relatório separado para cada um.
+
+- **Claude**: continua como estava.
+- **OpenAI/Codex**: lê os limites pelo `codex app-server`, com os arquivos locais em `~/.codex/sessions` como reserva. O Pacer não lê o token do Codex. Nasce desligado.
+- **GitHub Copilot**: usa a sessão do GitHub CLI que já está logada na máquina.
+- **OpenRouter**: mostra o limite da chave e o gasto do mês. Nasce desligado. A chave é colada nas Configurações.
+- **z.ai (GLM)**: lê o token do `settings.json` do Claude Code, quando a base URL é do z.ai, ou as variáveis `ZAI_API_KEY` e `ZHIPU_API_KEY`. Também nasce desligado.
+
+
+A decisão que mais pesou foi a de **provedor desligado não é tocado**. Nem leitura local, nem chamada de API. Testei isso com um provedor falso que conta quantas vezes foi consultado: desligado, o contador fica em zero. Isso importa porque ninguém quer que um app de monitoramento faça requisição a um serviço que a pessoa nem usa.
+
+## Chaves fora do arquivo de configuração
+
+OpenRouter e z.ai aceitam chave colada na interface. O valor vai direto para o Gerenciador de Credenciais do Windows, pelo crate `keyring`, e nunca para o `config.json`. A interface recebe só a lista de quem tem chave guardada, nunca o valor. Erros de validação também não ecoam a chave.
+
+A ordem de prioridade é explícita: a chave colada na interface vale mais que a variável de ambiente `OPENROUTER_API_KEY` e mais que o `settings.json` do z.ai.
+
+## Atualização automática
+
+Ao abrir, o app checa no GitHub Releases se existe versão nova e mostra o status em **Configurações → Atualizações**. O botão baixa, instala e reinicia. É o mesmo caminho que a [v0.4.1 do focusbrew](/devlog/focusbrew-v0-4-1-atualizacao-automatica) usa, com `tauri-plugin-updater`. A chave pública do updater fica no `tauri.conf.json`; a privada fica fora do repositório.
+
+## O que deu mais trabalho
+
+- **O relatório em CSV podia virar planilha com fórmula.** Nome de projeto ou de sessão vem do disco, e um valor começando com `=`, `+`, `-` ou `@` vira fórmula no Excel. Agora essas células são neutralizadas na exportação.
+- **Configurações maiores que a tela.** Com os provedores novos, a seção passou da altura da tela, então ganhou rolagem vertical. Com cinco provedores, as abas também precisaram dividir a largura por igual: no widget de 300 px, a última aba ficava cortada.
+- **Config antiga precisava continuar funcionando.** Quem já tinha o `config.json` da 2.1 não tem a chave do provedor novo. Essa ausência é tratada como "desligado", e a config antiga continua carregando.
+- **Cota sem limite não vira barra.** Cotas mensais (chat, sugestões, premium) só aparecem quando o plano tem aquele limite.
+
+## O que eu levo disso
+
+- **Desligado tem que significar intocado.** Um provedor novo que nasce ligado já faz leitura e chamada de rede sem a pessoa ter pedido.
+- **Segredo não deve morar no mesmo lugar que configuração.** O cofre do sistema foi a escolha para as chaves coladas, e o `config.json` ficou sem nenhum valor secreto.
+- **Um provedor falso que conta chamadas deixa a regra "desligado" verificável.** Dá para checar o número de chamadas em vez de confiar na leitura do código.
+
+Para testar, a beta está no [release v2.2.0-beta.2](https://github.com/sthevan027/pacer/releases). Se um provedor mostrar um número diferente do que você vê no painel oficial dele, vale abrir uma issue com o provedor e a versão.
