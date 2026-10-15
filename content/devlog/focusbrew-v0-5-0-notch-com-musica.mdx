@@ -1,0 +1,39 @@
+---
+title: "focusbrew v0.5.0: o notch agora controla a música"
+date: "2026-10-15"
+excerpt: "A 0.5.0 sai estável com anterior, play/pause e próxima no notch, e com a Agenda do Google. O bug mais chato foi de clique: a área que recebia o mouse ainda era a da barra parada."
+project: "focusbrew"
+draft: true
+---
+
+A 0.5.0-beta.1 conectou a tarefa de hoje com a Google Agenda. A 0.5.0 é a versão estável dessa mesma linha, e junta a isso uma coisa que eu queria há tempos: controlar a música sem sair da tarefa. Quando alguma coisa está tocando no Windows, o notch mostra **anterior, play/pause e próxima** ao lado do timer.
+
+O código é aberto (MIT): [github.com/sthevan027/focusbrew](https://github.com/sthevan027/focusbrew). A release está em [v0.5.0](https://github.com/sthevan027/focusbrew/releases/tag/v0.5.0).
+
+## O que muda na prática
+
+- **Controles de música no notch.** O app lê a sessão de mídia do Windows (SMTC) e manda os comandos de volta para ela. Funciona com os apps que expõem a sessão de mídia ao sistema. Dá para desligar em **Configurações → Notch**.
+- **Aba Música no painel.** O painel expandido ganhou uma aba de música, com capa, progresso e os mesmos controles.
+- **Alternar entre tarefa e música no notch.** Ctrl + scroll troca o conteúdo do box entre a tarefa e a música.
+- **Tamanho fixo por estilo.** Standard no médio, Minimal no pequeno.
+- **Google Agenda.** O que foi para beta na 0.5.0-beta.1 chega na estável: importar eventos do dia, concluir tarefa e mandar o ✓ para a Agenda na hora.
+
+## Atenção para quem está na 0.4.1
+
+A chave de assinatura do atualizador foi trocada. A 0.4.1 não consegue validar a 0.5.0, então quem está nela precisa baixar o instalador e instalar por cima uma vez. As próximas atualizações saem sozinhas. A v0.4.1 já mostrava o motivo: as versões instaladas só aceitam updates assinados pela chave que elas conhecem.
+
+## As decisões que mais pesaram
+
+**Hover contra botão.** Com a música no notch, o painel abria ao passar o mouse em qualquer ponto do box. Ele cobria os botões antes do clique. A solução foi desligar o hover quando a aba de música está no box. O painel abre pela borda da tela onde o widget está fixado, e um clique no box continua abrindo o painel.
+
+**A área de clique seguia o desenho errado.** Com mídia tocando e o timer parado, o widget desenhava o box, mas a zona de clique ainda era a da barra parada, de 140×14. Os cliques nos botões passavam direto pela janela. A correção foi fazer a zona de clique receber `has_media`, do mesmo jeito que a escolha do formato. Duas funções que decidem a mesma coisa vão divergir em algum momento, então o melhor é que uma consulte a outra.
+
+**Lógica separada da interface.** A escolha da aba ativa (tarefa ou música) e o formato do box são funções puras, sem depender da janela. Isso deixa a regra fácil de ler e de testar.
+
+## O que eu levo disso
+
+- **Desenho e área de clique precisam vir da mesma fonte.** Se o que aparece na tela e o que recebe o mouse são calculados em lugares diferentes, o bug aparece só no uso real.
+- **Hover em cima de controles é um conflito de intenção.** Quando o usuário quer clicar num botão, o painel não pode aparecer por cima dele.
+- **Release também é parte do produto.** A troca de chave não mexe em nenhuma linha de funcionalidade, mas exige um passo manual de quem já usa o app. Isso precisa aparecer com destaque na nota de release.
+
+Se algum controle de mídia se comportar diferente do descrito aqui, o caminho mais útil é abrir uma issue dizendo qual app estava tocando e o que o notch fez.
