@@ -1,0 +1,47 @@
+---
+title: "focusbrew v0.5 beta: as tarefas conversam com a Google Agenda"
+date: "2026-10-14"
+excerpt: "A 0.5.0-beta.1 conecta a conta Google e mantém as tarefas de hoje sincronizadas com os eventos do dia. A parte difícil não foi a API: foi decidir o que acontece quando os dois lados mudam ao mesmo tempo."
+project: "focusbrew"
+draft: true
+---
+
+A v0.4.1 cuidou de atualizar o app. A 0.5 mexe no que o app faz no dia a dia: a tarefa de hoje agora conversa com a Google Agenda. Saiu como **0.5.0-beta.1**, uma pré-release, porque a integração ainda precisa de uso real antes de virar versão estável. A política de versões e pré-releases do projeto está documentada no repositório.
+
+O código é aberto (MIT): [github.com/sthevan027/focusbrew](https://github.com/sthevan027/focusbrew).
+
+## O que muda na prática
+
+- **Conectar a conta.** Em **Configurações → Google Agenda**, o botão abre o navegador, o Google pede permissão só para eventos do Calendar, e o app recebe o retorno numa porta local temporária. Desconectar apaga o login guardado e solta os vínculos, sem apagar nenhuma tarefa.
+- **Importar eventos do dia.** Na aba **Agenda** do painel, a lista mostra os eventos de hoje. Escolho quais viram tarefa. Um evento já importado não duplica.
+- **Sincronizar a cada 5 minutos.** Tarefa nova de hoje vira evento. Editar, concluir ou excluir se reflete nos dois lados.
+- **Criar e editar eventos pelo app.** Renomear e excluir também passam para o Google.
+
+## As decisões que mais pesaram
+
+**Só o dia de hoje entra na sincronização.** Se o sync olhasse todas as tarefas, uma tarefa de outro dia pareceria apagada do lado do Google, porque ela simplesmente não estava na janela consultada. Limitar ao dia corrente remove essa classe inteira de bug.
+
+**Excluir só quando o Google confirma.** Uma tarefa só é apagada quando o próprio Google informa que o evento foi removido. Antes dessa correção, mover a tarefa para outro dia a apagava, porque o sync a tratava como excluída.
+
+**Concluir sem campo de conclusão.** A Google Agenda não tem um campo "feito". Usei um prefixo: o `✓ ` no título do evento marca a tarefa como concluída nos dois lados. É feio de propósito: é o único sinal que sobrevive a qualquer edição manual no Calendar.
+
+**Conflito: vence a edição mais recente.** Se a mesma tarefa for editada no app e no Google entre duas sincronizações, quem foi editado por último ganha. Não tentei fazer merge de campo a campo. Para uma lista de tarefas do dia, a regra simples basta.
+
+**Token só onde precisa.** O refresh token fica guardado no keyring do sistema. O access token fica só em memória e é renovado quando necessário. Nada de token em arquivo de configuração.
+
+## O que deu mais trabalho
+
+O login em si foi a parte previsível: PKCE, callback local, troca de código por token. O que apareceu depois:
+
+1. **O Google exige o `client_secret` no endpoint de token, mesmo com PKCE, para clientes de aplicativo para computador.** O secret entra no build por variável de ambiente (`FOCUSBREW_GOOGLE_CLIENT_SECRET`) e não fica no código-fonte.
+2. **Tarefa feita antes de existir o evento nasce com o ✓.** Quando a sincronização cria o evento, ele já sai marcado como concluído.
+3. **Importar um evento já marcado não duplica o ✓.** O import reconhece o prefixo que já está no título.
+4. **Uma resposta de eventos com um item fora do formato não derruba o dia inteiro.** A leitura é feita item a item: um evento estranho é ignorado e os outros aparecem.
+
+## O que eu levo disso
+
+- **Sincronização entre dois sistemas é uma questão de escopo.** Quanto menor a janela que o sync enxerga, menos casos de "apagou sozinho" existem.
+- **Onde a API não tem um campo, uma convenção visível resolve.** O prefixo `✓` é ruim, mas funciona e qualquer pessoa entende olhando o calendário.
+- **Uma revisão final com a pergunta certa ajuda.** Reler a branch perguntando "o que acontece se o usuário mexer dos dois lados?" fechou vários casos de borda que não estavam cobertos quando escrevi o sync.
+
+Para testar, instale a beta pelo [release v0.5.0-beta.1](https://github.com/sthevan027/focusbrew/releases). Se algo de sincronização se comportar diferente do descrito aqui, o caminho mais útil é abrir uma issue com o que estava no app e o que aconteceu no Google Agenda.
