@@ -1,0 +1,41 @@
+---
+title: "focusbrew v0.6.0: a música entra no notch"
+date: "2026-10-15"
+excerpt: "A 0.6.0 põe anterior, play/pause e próxima ao lado do timer, lendo a sessão de mídia do Windows. A parte difícil não foi tocar a música: foi fazer a zona do mouse acompanhar a forma do box."
+project: "focusbrew"
+draft: true
+---
+
+A 0.5.0 trouxe a Google Agenda para a tarefa de hoje. A 0.6.0 traz a outra coisa que eu queria há tempos: controlar a música sem sair da tarefa. Quando alguma coisa está tocando no Windows, o notch mostra **anterior, play/pause e próxima** ao lado do timer.
+
+Essa versão também tem a landing page do focusbrew, com um vídeo de 27 segundos feito em Remotion.
+
+O código é aberto (MIT): [github.com/sthevan027/focusbrew](https://github.com/sthevan027/focusbrew). A tag está em [v0.6.0](https://github.com/sthevan027/focusbrew/releases/tag/v0.6.0).
+
+## O que muda na prática
+
+- **Controles no notch.** Com o timer rodando, a caixa mostra os três controles. A opção fica em **Configurações → Notch → Controles de música** e vem ligada.
+- **Só música, sem tarefa.** Se nada está com timer e alguma coisa está tocando, o notch vira uma caixa de música no tamanho médio, com as quatro bordas arredondadas.
+- **Aba Música no painel.** O painel expandido ganhou uma aba com capa, progresso e os mesmos controles.
+- **Ctrl + scroll** alterna o conteúdo da caixa entre a tarefa e a música.
+- **Tamanho por estilo.** Standard fica no médio e Minimal no pequeno. A opção de escala saiu da tela. Arquivos antigos com `widget_scale` continuam carregando, porque o campo é ignorado.
+
+Dependo do app expor a sessão de mídia ao Windows (SMTC). Um player que não expõe isso não aparece no notch.
+
+## A landing page
+
+É uma página única em PT-BR, na mesma estrutura da landing do Pacer: hero com o vídeo narrado, "Como funciona", prints reais, privacidade, instalação (com a nota sobre o SmartScreen) e novidades. Está em Vite + React + TypeScript, com Bun, e usa os mesmos tokens de cor e fonte do app.
+
+O botão de download pega o instalador da última release pela API do GitHub. Se a API falhar, ele cai para a v0.4.1. A hospedagem ainda está em análise: o `netlify.toml` já está pronto, mas eu ainda não decidi publicar por ali.
+
+O vídeo do hero sai de uma composição Remotion no próprio repositório, em `hero-video/`. Ela usa o notch real do app: barra, caixa, painel, aba GitHub e nota rápida. A ideia é rodar `bun run render` a cada release, em vez de regravar a tela.
+
+## As decisões que mais pesaram
+
+**A janela nunca muda de tamanho.** Barra, caixa e painel são uma forma só que se transforma. Redimensionar a janela do Tauri a cada transição piscaria e travaria o mouse. Por isso a janela fica no tamanho máximo, a forma visível muda dentro dela, e fora da forma o mouse passa direto para o que está embaixo.
+
+**A zona do mouse segue a forma.** Quando só há música, a área que recebe o mouse precisa ser a da caixa de música, não a da barra parada. Essa parte teve mais de uma correção.
+
+**Hover desligado com a aba de música.** Com a aba de música ativa, passar o mouse não abre o painel por cima dos controles. O painel abre quando o cursor encosta na borda onde o widget está fixado. Clicar na caixa continua abrindo o painel fixado.
+
+**Lógica separada da interface.** Mapeamento de capa e progresso, escolha da aba ativa e detecção de borda são funções puras, com testes (`mediaTabs.ts`, `edgeTouch.ts` e os `.test.ts` ao lado). Assim a parte que mais muda de comportamento é a que tem teste.
