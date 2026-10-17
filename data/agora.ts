@@ -2,11 +2,11 @@
 // A parte automática (releases e repositórios ativos) vem do GitHub.
 // Ao mudar o texto, atualize também `updatedAt` (AAAA-MM-DD).
 export const agoraData = {
-  updatedAt: "2026-10-04",
-  headline: "Lançando o PR Indicator no Windows e reconstruindo este hub como devlog.",
+  updatedAt: "2026-10-17",
+  headline: "Soltando o focusbrew 0.6.0 com landing page no ar e controles de música no notch.",
   items: [
-    "PR Indicator: versão Windows publicada (release windows-v1.0.0), com o mesmo visual da extensão GNOME.",
-    "Strivo: aplicando o design Feed 3 + Stores no app.",
+    "focusbrew 0.6.0: anterior, play/pause e próxima no notch, com aba Música no painel. Landing page nova com vídeo de 27 s feito em Remotion.",
+    "Pacer: betas da 2.2 com mais provedores de uso (beta 2 saiu em 13/10).",
     "Este hub: virando um devlog — posts longos sobre os projetos e notas do X."
   ]
 };
