@@ -26,7 +26,7 @@ Dependo do app expor a sessão de mídia ao Windows (SMTC). Um player que não e
 
 É uma página única em PT-BR, na mesma estrutura da landing do Pacer: hero com o vídeo narrado, "Como funciona", prints reais, privacidade, instalação (com a nota sobre o SmartScreen) e novidades. Está em Vite + React + TypeScript, com Bun, e usa os mesmos tokens de cor e fonte do app.
 
-O botão de download pega o instalador da última release pela API do GitHub. Se a API falhar, ele cai para a v0.4.1. A hospedagem ainda está em análise: o `netlify.toml` já está pronto, mas eu ainda não decidi publicar por ali.
+O botão de download pega o instalador da última release pela API do GitHub. Se a API falhar, ele cai para a v0.4.1. A landing está no ar em [focusbrew.netlify.app](https://focusbrew.netlify.app), publicada na Netlify a partir do `netlify.toml` do repositório.
 
 O vídeo do hero sai de uma composição Remotion no próprio repositório, em `hero-video/`. Ela usa o notch real do app: barra, caixa, painel, aba GitHub e nota rápida. A ideia é rodar `bun run render` a cada release, em vez de regravar a tela.
 
