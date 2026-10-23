@@ -1,0 +1,33 @@
+---
+title: "Portfólio v2: do currículo para a página que capta cliente"
+date: "2026-10-23"
+excerpt: "O portfólio mostrava quem eu sou. Agora ele mostra o que eu entrego pra empresa: serviços, casos reais, um formulário que envia de verdade e SEO por página."
+project: "Portfolio"
+draft: true
+---
+
+O portfólio que fiz em outubro contava a minha história. Funcionava pra recrutador, mas não respondia a pergunta de quem tem um processo manual pra resolver e quer saber se eu consigo entregar um sistema. Essa versão tenta responder isso.
+
+## O que mudou no conteúdo
+
+A home ganhou uma sequência nova: o problema, os serviços, os casos e os diferenciais. A página `/servicos` detalha o que eu faço (sistemas sob medida, automação de processos, manutenção e integração). Cada projeto importante virou uma página própria em `/projetos/[slug]`, com seis estudos de caso escritos a partir do que realmente foi feito.
+
+Os números que aparecem são só os que eu consegui medir: relatórios de 1 pra 3 por dia e ART de 5 dias pra meio dia. O resto da descrição é o que aconteceu, sem métrica inventada.
+
+## O formulário que não mentia
+
+O formulário antigo simulava o envio e sempre mostrava "enviado", mesmo quando nada saía. Isso foi a primeira coisa a cair.
+
+Agora a rota `/api/contact` envia pelo Resend. Se a chave não estiver configurada, ela responde 503 e o site mostra o erro com atalho pro WhatsApp e pro e-mail. Prefiro um erro honesto a uma confirmação falsa.
+
+## SEO e medição
+
+Cada página tem metadados próprios, JSON-LD e um sitemap com datas fixas, pra não reindexar tudo a cada build. O Google Analytics 4 é opcional: o script só carrega depois de o visitante aceitar o banner de consentimento, e só existe se o ID estiver configurado.
+
+Os eventos de conversão são `whatsapp_click`, `quote_click`, `email_click`, `form_submit`, `form_error` e `service_view`. Os dois que importam são `form_submit` e `whatsapp_click`.
+
+## Onde está agora
+
+A mudança está num branch (`claude/pensive-bell-6ri04k`) e ainda não foi para o ar. Antes do merge faltam três coisas: a variável do Resend na Vercel, a verificação no Search Console e uma revisão dos textos dos casos, pra garantir que cada um bate com o que aconteceu.
+
+Quando sair, o site fica em [sthevandev.vercel.app](https://sthevandev.vercel.app).
