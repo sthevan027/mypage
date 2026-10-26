@@ -2,9 +2,10 @@
 // A parte automática (releases e repositórios ativos) vem do GitHub.
 // Ao mudar o texto, atualize também `updatedAt` (AAAA-MM-DD).
 export const agoraData = {
-  updatedAt: "2026-10-20",
-  headline: "Montando o tracker de atividade do focusbrew, ainda sem release, e a landing page no ar.",
+  updatedAt: "2026-10-23",
+  headline: "Portfólio reposicionado para clientes empresariais, aguardando merge. O tracker do focusbrew segue em desenvolvimento.",
   items: [
+    "Portfólio: nova versão com serviços, estudos de caso e formulário que envia de verdade. Está num branch, ainda não foi para o ar.",
     "focusbrew: tracker de atividade em desenvolvimento no branch dev. Já tem detecção do app ativo, banco local, API e relatório com semana e mês. Não saiu em release.",
     "focusbrew 0.6.1 (17/10): o painel lembra a última aba escolhida, mesmo depois de reiniciar. A 0.6.0 (15/10) trouxe anterior, play/pause e próxima no notch.",
     "Landing page do focusbrew no repositório, com vídeo de 27 s feito em Remotion. No ar em focusbrew.netlify.app.",
