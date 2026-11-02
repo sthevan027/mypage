@@ -2,9 +2,11 @@
 // A parte automática (releases e repositórios ativos) vem do GitHub.
 // Ao mudar o texto, atualize também `updatedAt` (AAAA-MM-DD).
 export const agoraData = {
-  updatedAt: "2026-10-30",
-  headline: "focusbrew 0.7.1 saiu com correções de segurança e o tracker desligado por padrão. Portfólio tem nova rodada em branch, ainda não publicada.",
+  updatedAt: "2026-11-02",
+  headline: "PR Indicator 1.1.0 chegou ao Linux fora do GNOME, com app de bandeja no KDE e XFCE. focusbrew segue na 0.7.1, e a captura por voz está em branch, ainda não publicada.",
   items: [
+    "PR Indicator 1.1.0 (01/11): o app de bandeja do Windows agora roda no Linux, com AppImage, autostart e script para fixar o popup no KDE. Fora do GNOME, o número de PRs fica no ícone.",
+    "focusbrew, em branch e ainda não publicado (31/10 a 01/11): caixa de captura com atalho global, captura por voz, gravação atômica e quarentena de arquivos corrompidos.",
     "Portfólio: reposicionado para clientes (26/10), design system v2 em azul e carrossel de casos (27/10). Nova rodada em branch (29/10), ainda não publicada: site só para clientes, sem currículo.",
     "focusbrew 0.7.0 (26/10) e 0.7.1 (28/10): tracker de atividade, agora desligado por padrão, mais correções de segurança e acessibilidade. Google Agenda reconecta quando o acesso é revogado.",
     "focusbrew 0.6.0 e 0.6.1 (15 e 17/10): controles de música no notch e o painel que lembra a última aba escolhida.",
